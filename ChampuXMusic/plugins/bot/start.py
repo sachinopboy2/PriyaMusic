@@ -16,10 +16,11 @@ from ChampuXMusic.utils.database import (
     get_lang,
     is_banned_user,
     is_on_off,
+    get_assistant,
 )
 from ChampuXMusic.utils.decorators.language import LanguageStart
 from ChampuXMusic.utils.formatters import get_readable_time
-from ChampuXMusic.utils.inline import help_pannel, private_panel, start_panel
+from ChampuXMusic.utils.inline import alive_panel, help_pannel, private_panel, start_panel
 from config import BANNED_USERS
 from strings import get_string
 
@@ -115,19 +116,47 @@ async def start_pm(client, message: Message, _):
 
 @app.on_message(filters.command(["start"]) & filters.group & ~BANNED_USERS)
 @LanguageStart
-async def start_gp(client, message: Message, _):
-    out = start_panel(_)
-    uptime = int(time.time() - _boot_)
-    await message.reply_photo(
-        photo=config.START_IMG_URL,
-        caption=_["start_1"].format(app.mention, get_readable_time(uptime)),
-        reply_markup=InlineKeyboardMarkup(out),
-    )
-    return await add_served_chat(message.chat.id)
+async def testbot(client, message: Message, _):
+    try:
+        chat_id = message.chat.id
+        try:
+            # Try downloading the group's photo
+            groups_photo = await client.download_media(
+                message.chat.photo.big_file_id, file_name=f"chatpp{chat_id}.png"
+            )
+            chat_photo = groups_photo if groups_photo else config.START_IMG_URL
+        except AttributeError:
+            # If there's no chat photo, use the default image
+            chat_photo = config.START_IMG_URL
+
+        # Get the alive panel and uptime
+        out = alive_panel(_)
+        uptime = int(time.time() - _boot_)
+
+        # Send the response with the group photo or fallback to START_IMG_URL
+        if chat_photo:
+            await message.reply_photo(
+                photo=chat_photo,
+                caption=_["start_7"].format(client.mention, get_readable_time(uptime)),
+                reply_markup=InlineKeyboardMarkup(out),
+            )
+        else:
+            await message.reply_photo(
+                photo=config.START_IMG_URL,
+                caption=_["start_7"].format(client.mention, get_readable_time(uptime)),
+                reply_markup=InlineKeyboardMarkup(out),
+            )
+
+        # Add the chat to the served chat list
+        return await add_served_chat(chat_id)
+
+    except Exception as e:
+        print(f"Error: {e}")
 
 
 @app.on_message(filters.new_chat_members, group=-1)
 async def welcome(client, message: Message):
+    chat_id = message.chat.id
     for member in message.new_chat_members:
         try:
             language = await get_lang(message.chat.id)
@@ -137,21 +166,21 @@ async def welcome(client, message: Message):
                     await message.chat.ban_member(member.id)
                 except:
                     pass
-            if member.id == app.id:
-                if message.chat.type != ChatType.SUPERGROUP:
-                    await message.reply_text(_["start_4"])
-                    return await app.leave_chat(message.chat.id)
-                if message.chat.id in await blacklisted_chats():
-                    await message.reply_text(
-                        _["start_5"].format(
-                            app.mention,
-                            f"https://t.me/{app.username}?start=sudolist",
-                            config.SUPPORT_CHAT,
-                        ),
-                        disable_web_page_preview=True,
+            if member.id == client.id:
+                try:
+                    groups_photo = await client.download_media(
+                        message.chat.photo.big_file_id, file_name=f"chatpp{chat_id}.png"
                     )
-                    return await app.leave_chat(message.chat.id)
-
+                    chat_photo = groups_photo if groups_photo else config.START_IMG_URL
+                except AttributeError:
+                    chat_photo = config.START_IMG_URL
+                    
+                out = alive_panel(_)
+                await message.reply_photo(
+                    photo=chat_photo,
+                    caption=_["start_8"],
+                    reply_markup=InlineKeyboardMarkup(out),
+                )
                 out = start_panel(_)
                 await message.reply_photo(
                     photo=config.START_IMG_URL,
