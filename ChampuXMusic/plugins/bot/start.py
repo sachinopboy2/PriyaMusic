@@ -7,7 +7,7 @@ from youtubesearchpython.__future__ import VideosSearch
 
 import config
 from ChampuXMusic import app
-from ChampuXMusic.misc import _boot_
+from ChampuXMusic.misc import _boot_, SUDOERS
 from ChampuXMusic.plugins.sudo.sudoers import sudoers_list
 from ChampuXMusic.utils.database import (
     add_served_chat,
@@ -157,15 +157,13 @@ async def testbot(client, message: Message, _):
 @app.on_message(filters.new_chat_members, group=-1)
 async def welcome(client, message: Message):
     chat_id = message.chat.id
+    # Handle new chat members
     for member in message.new_chat_members:
         try:
-            language = await get_lang(message.chat.id)
+            language = await get_lang(chat_id)
             _ = get_string(language)
-            if await is_banned_user(member.id):
-                try:
-                    await message.chat.ban_member(member.id)
-                except:
-                    pass
+
+            # If bot itself joins the chat
             if member.id == client.id:
                 try:
                     groups_photo = await client.download_media(
@@ -174,26 +172,29 @@ async def welcome(client, message: Message):
                     chat_photo = groups_photo if groups_photo else config.START_IMG_URL
                 except AttributeError:
                     chat_photo = config.START_IMG_URL
-                    
+
+                userbot = await get_assistant(chat_id)
                 out = alive_panel(_)
                 await message.reply_photo(
                     photo=chat_photo,
                     caption=_["start_8"],
                     reply_markup=InlineKeyboardMarkup(out),
                 )
-                out = start_panel(_)
-                await message.reply_photo(
-                    photo=config.START_IMG_URL,
-                    caption=_["start_3"].format(
-                        message.from_user.first_name,
-                        app.mention,
-                        message.chat.title,
-                        app.mention,
-                    ),
-                    reply_markup=InlineKeyboardMarkup(out),
+
+            # Handle owner joining
+            if member.id in config.OWNER_ID:
+                return await message.reply_text(
+                    _["start_3"].format(client.mention, member.mention)
                 )
-                await add_served_chat(message.chat.id)
-                await message.stop_propagation()
-        except Exception as ex:
-            print(ex)
+
+            # Handle SUDOERS joining
+            if member.id in SUDOERS:
+                return await message.reply_text(
+                    _["start_4"].format(client.mention, member.mention)
+                )
+            return
+
+        except Exception as e:
+            print(f"Error: {e}")
+            return
 
