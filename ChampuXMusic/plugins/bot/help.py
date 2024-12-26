@@ -12,6 +12,10 @@ from config import BANNED_USERS, START_IMG_URL, SUPPORT_CHAT
 from strings import get_string, helpers
 
 
+from typing import Union
+from pyrogram import filters, types
+from pyrogram.types import InlineKeyboardMarkup
+
 @app.on_message(filters.command(["help"]) & filters.private & ~BANNED_USERS)
 @app.on_callback_query(filters.regex("settings_back_helper") & ~BANNED_USERS)
 async def helper_private(
@@ -35,22 +39,52 @@ async def helper_private(
             await update.delete()
         except:
             pass
+
         language = await get_lang(update.chat.id)
         _ = get_string(language)
         keyboard = help_pannel(_)
+
+        try:
+            if update.chat.photo:
+                userss_photo = await app.download_media(
+                    update.chat.photo.big_file_id,
+                )
+            else:
+                userss_photo = "assets/nodp.jpg"
+
+            chat_photo = userss_photo if userss_photo else START_IMG_URL
+        except AttributeError:
+            chat_photo = "assets/nodp.jpg"
+
         await update.reply_photo(
-            photo=START_IMG_URL,
+            photo=chat_photo,
             caption=_["help_1"].format(SUPPORT_CHAT),
             reply_markup=keyboard,
         )
 
 
+
 @app.on_message(filters.command(["help"]) & filters.group & ~BANNED_USERS)
 @LanguageStart
 async def help_com_group(client, message: Message, _):
-    keyboard = private_help_panel(_)
-    await message.reply_text(_["help_2"], reply_markup=InlineKeyboardMarkup(keyboard))
+    try:
+        if message.chat.photo:
+            group_photo = await app.download_media(
+                message.chat.photo.big_file_id,
+            )
+        else:
+            group_photo = "assets/nodp.png"
 
+        chat_photo = group_photo if group_photo else "assets/nodp.png"
+    except AttributeError:
+        chat_photo = "assets/nodp.png"
+
+    keyboard = private_help_panel(_)
+    await message.reply_photo(
+        photo=chat_photo,
+        caption=_["help_2"],
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
 
 @app.on_callback_query(filters.regex("help_callback") & ~BANNED_USERS)
 @languageCB
