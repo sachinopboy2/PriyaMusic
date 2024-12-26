@@ -50,11 +50,11 @@ async def helper_private(
                     update.chat.photo.big_file_id,
                 )
             else:
-                userss_photo = "assets/nodp.jpg"
+                userss_photo = "ChampuXMusic/assets/nodp.jpg"
 
             chat_photo = userss_photo if userss_photo else START_IMG_URL
         except AttributeError:
-            chat_photo = "assets/nodp.jpg"
+            chat_photo = "ChampuXMusic/assets/nodp.jpg"
 
         await update.reply_photo(
             photo=chat_photo,
@@ -73,11 +73,11 @@ async def help_com_group(client, message: Message, _):
                 message.chat.photo.big_file_id,
             )
         else:
-            group_photo = "assets/nodp.png"
+            group_photo = "ChampuXMusic/assets/nodp.png"
 
-        chat_photo = group_photo if group_photo else "assets/nodp.png"
+        chat_photo = group_photo if group_photo else "ChampuXMusic/assets/nodp.png"
     except AttributeError:
-        chat_photo = "assets/nodp.png"
+        chat_photo = "ChampuXMusic/assets/nodp.png"
 
     keyboard = private_help_panel(_)
     await message.reply_photo(

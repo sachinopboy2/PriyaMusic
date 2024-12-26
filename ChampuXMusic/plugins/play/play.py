@@ -6,7 +6,7 @@ from pyrogram.types import InlineKeyboardMarkup, InputMediaPhoto, Message
 from pytgcalls.exceptions import NoActiveGroupCall
 
 import config
-from ChampuXMusic import Apple, Resso, SoundCloud, Spotify, Telegram, YouTube, app
+from ChampuXMusic import EMOJIS, Apple, Resso, SoundCloud, Spotify, Telegram, YouTube, app
 from ChampuXMusic.core.call import Champu
 from ChampuXMusic.utils import seconds_to_min, time_to_seconds
 from ChampuXMusic.utils.channelplay import get_channeplayCB
@@ -53,8 +53,9 @@ async def play_commnd(
     url,
     fplay,
 ):
+    Emoji = random.choice(EMOJIS)
     mystic = await message.reply_text(
-        _["play_2"].format(channel) if channel else _["play_1"]
+        _["play_2"].format(channel) if channel else _[Emoji]
     )
     plist_id = None
     slider = None
@@ -453,8 +454,9 @@ async def play_music(client, CallbackQuery, _):
         await CallbackQuery.answer()
     except:
         pass
+    Emoji = random.choice(EMOJIS)
     mystic = await CallbackQuery.message.reply_text(
-        _["play_2"].format(channel) if channel else _["play_1"]
+        _["play_2"].format(channel) if channel else _[Emoji]
     )
     try:
         details, track_id = await YouTube.track(vidid, True)
@@ -540,8 +542,9 @@ async def play_playlists_command(client, CallbackQuery, _):
         await CallbackQuery.answer()
     except:
         pass
+    Emoji = random.choice(EMOJIS)
     mystic = await CallbackQuery.message.reply_text(
-        _["play_2"].format(channel) if channel else _["play_1"]
+        _["play_2"].format(channel) if channel else _[Emoji]
     )
     videoid = lyrical.get(videoid)
     video = True if mode == "v" else None
