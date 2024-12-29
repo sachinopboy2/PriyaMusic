@@ -111,4 +111,4 @@ async def del_all_sudo(client, message: Message, _):
             if removed:
                 SUDOERS.remove(user_id)
                 count -= 1
-    await message.reply_text(f"ʀᴇᴍᴏᴠᴇᴅ {count} ᴜsᴇʀs ғʀᴏᴍ ᴛʜᴇ sᴜᴅᴏ ʟɪsᴛ.")
+    await message.reply_text(f"ʀᴇᴍᴏᴠᴇᴅ ᴀʟʟ ᴜsᴇʀs ғʀᴏᴍ ᴛʜᴇ sᴜᴅᴏ ʟɪsᴛ.")
