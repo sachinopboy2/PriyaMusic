@@ -57,7 +57,7 @@ async def sudo():
         )
     if sudoers:
         for user_id in sudoers:
-            SUDOERS.add(user_id)
+            SUDOERS.add(user_id)  # Ensure each user_id is added individually
     LOGGER(__name__).info(f"Sudoers Loaded.")
 
 
