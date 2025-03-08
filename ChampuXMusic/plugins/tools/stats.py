@@ -11,7 +11,7 @@ from pytgcalls.__version__ import __version__ as pytgver
 import config
 from ChampuXMusic import app
 from ChampuXMusic.core.userbot import assistants
-from ChampuXMusic.misc import SUDOERS, mongodb
+from ChampuXMusic.misc import SUDOERS, pymongodb
 from ChampuXMusic.plugins import ALL_MODULES
 from ChampuXMusic.utils.database import get_served_chats, get_served_users, get_sudoers
 from ChampuXMusic.utils.decorators.language import language, languageCB
@@ -98,7 +98,7 @@ async def bot_stats(client, CallbackQuery, _):
     total = hdd.total / (1024.0**3)
     used = hdd.used / (1024.0**3)
     free = hdd.free / (1024.0**3)
-    call = await mongodb.command("dbstats")
+    call = await pymongodb.command("dbstats")
     datasize = call["dataSize"] / 1024
     storage = call["storageSize"] / 1024
     served_chats = len(await get_served_chats())
