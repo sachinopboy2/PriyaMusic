@@ -49,6 +49,8 @@ def dbb():
 def sudo():
     global SUDOERS
     OWNER = config.OWNER_ID
+    if not isinstance(OWNER, list):
+        OWNER = [OWNER]  # Ensure OWNER is a list
     if config.MONGO_DB_URI is None:
         for user_id in OWNER:
             SUDOERS.add(user_id)
@@ -71,6 +73,7 @@ def sudo():
                     continue
                 SUDOERS.add(x)
     LOGGER(__name__).info(f"Sudoers Loaded.")
+
 
 def heroku():
     global HAPP
