@@ -46,7 +46,7 @@ def dbb():
     LOGGER(__name__).info(f"Database Initialized.")
 
 
-def sudo():
+async def sudo():
     global SUDOERS
     OWNER = config.OWNER_ID
     if not isinstance(OWNER, list):
@@ -56,13 +56,13 @@ def sudo():
             SUDOERS.add(user_id)
     else:
         sudoersdb = pymongodb.sudoers
-        sudoers = sudoersdb.find_one({"sudo": "sudo"})
+        sudoers = await sudoersdb.find_one({"sudo": "sudo"})
         sudoers = [] if not sudoers else sudoers["sudoers"]
         for user_id in OWNER:
             SUDOERS.add(user_id)
             if user_id not in sudoers:
                 sudoers.append(user_id)
-                sudoersdb.update_one(
+                await sudoersdb.update_one(
                     {"sudo": "sudo"},
                     {"$set": {"sudoers": sudoers}},
                     upsert=True,
@@ -77,7 +77,7 @@ def sudo():
 
 def heroku():
     global HAPP
-    if is_heroku:
+    if is_heroku():
         if config.HEROKU_API_KEY and config.HEROKU_APP_NAME:
             try:
                 Heroku = heroku3.from_key(config.HEROKU_API_KEY)
