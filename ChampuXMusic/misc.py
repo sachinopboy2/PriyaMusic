@@ -62,7 +62,7 @@ async def sudo():
             SUDOERS.add(user_id)
             if user_id not in sudoers:
                 sudoers.append(user_id)
-                await sudoersdb.update_one(
+                sudoersdb.update_one(  # Removed await
                     {"sudo": "sudo"},
                     {"$set": {"sudoers": sudoers}},
                     upsert=True,
