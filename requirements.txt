@@ -9,6 +9,7 @@ hachoir
 heroku3
 httpx==0.27.2
 motor
+opencv-python
 pillow
 psutil
 py-tgcalls==1.2.9
@@ -26,3 +27,4 @@ unidecode
 yt-dlp
 youtube-search
 youtube-search-python
+ 

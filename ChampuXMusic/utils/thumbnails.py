@@ -1,121 +1,83 @@
-import os
-import re
-
-import aiofiles
 import aiohttp
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
-from unidecode import unidecode
+import io
+import asyncio
+from PIL import Image, ImageDraw, ImageFont
+import cv2
+import numpy as np
 from youtubesearchpython.__future__ import VideosSearch
 
-from ChampuXMusic import app
-from config import YOUTUBE_IMG_URL
+# Replace with your fallback image
+YOUTUBE_IMG_URL = "https://files.catbox.moe/2f6prl.jpg"
 
-
-def changeImageSize(maxWidth, maxHeight, image):
-    widthRatio = maxWidth / image.size[0]
-    heightRatio = maxHeight / image.size[1]
-    newWidth = int(widthRatio * image.size[0])
-    newHeight = int(heightRatio * image.size[1])
-    newImage = image.resize((newWidth, newHeight))
-    return newImage
-
-
-def clear(text):
-    list = text.split(" ")
-    title = ""
-    for i in list:
-        if len(title) + len(i) < 60:
-            title += " " + i
-    return title.strip()
-
-
-async def get_thumb(videoid):
-    if os.path.isfile(f"cache/{videoid}.png"):
-        return f"cache/{videoid}.png"
-
-    url = f"https://www.youtube.com/watch?v={videoid}"
+async def fetch_thumbnail(videoid):
+    """
+    Fetch the thumbnail URL for a given YouTube video ID.
+    """
     try:
-        results = VideosSearch(url, limit=1)
+        results = VideosSearch(f"https://www.youtube.com/watch?v={videoid}", limit=1)
         for result in (await results.next())["result"]:
-            try:
-                title = result["title"]
-                title = re.sub("\W+", " ", title)
-                title = title.title()
-            except:
-                title = "Unsupported Title"
-            try:
-                duration = result["duration"]
-            except:
-                duration = "Unknown Mins"
-            thumbnail = result["thumbnails"][0]["url"].split("?")[0]
-            try:
-                views = result["viewCount"]["short"]
-            except:
-                views = "Unknown Views"
-            try:
-                channel = result["channel"]["name"]
-            except:
-                channel = "Unknown Channel"
-
-        async with aiohttp.ClientSession() as session:
-            async with session.get(thumbnail) as resp:
-                if resp.status == 200:
-                    f = await aiofiles.open(f"cache/thumb{videoid}.png", mode="wb")
-                    await f.write(await resp.read())
-                    await f.close()
-
-        youtube = Image.open(f"cache/thumb{videoid}.png")
-        image1 = changeImageSize(1280, 720, youtube)
-        image2 = image1.convert("RGBA")
-        background = image2.filter(filter=ImageFilter.BoxBlur(10))
-        enhancer = ImageEnhance.Brightness(background)
-        background = enhancer.enhance(0.5)
-        draw = ImageDraw.Draw(background)
-        arial = ImageFont.truetype("ChampuXMusic/assets/font2.ttf", 30)
-        font = ImageFont.truetype("ChampuXMusic/assets/font.ttf", 30)
-        draw.text((1110, 8), unidecode(app.name), fill="white", font=arial)
-        draw.text(
-            (55, 560),
-            f"{channel} | {views[:23]}",
-            (255, 255, 255),
-            font=arial,
-        )
-        draw.text(
-            (57, 600),
-            clear(title),
-            (255, 255, 255),
-            font=font,
-        )
-        draw.line(
-            [(55, 660), (1220, 660)],
-            fill="white",
-            width=5,
-            joint="curve",
-        )
-        draw.ellipse(
-            [(918, 648), (942, 672)],
-            outline="white",
-            fill="white",
-            width=15,
-        )
-        draw.text(
-            (36, 685),
-            "00:00",
-            (255, 255, 255),
-            font=arial,
-        )
-        draw.text(
-            (1185, 685),
-            f"{duration[:23]}",
-            (255, 255, 255),
-            font=arial,
-        )
-        try:
-            os.remove(f"cache/thumb{videoid}.png")
-        except:
-            pass
-        background.save(f"cache/{videoid}.png")
-        return f"cache/{videoid}.png"
-    except Exception as e:
-        print(e)
+            return result["thumbnails"][0]["url"].split("?")[0]
+    except Exception:
         return YOUTUBE_IMG_URL
+
+async def download_image(url):
+    """
+    Download an image from a URL and return it as a PIL Image object.
+    """
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            if resp.status == 200:
+                return Image.open(io.BytesIO(await resp.read())).convert("RGB")
+    return None
+
+async def generate_styled_thumbnail(videoid, title, artist, progress_sec, duration_sec, output_path="styled_thumb.jpg"):
+    """
+    Generate a styled thumbnail with a blurred background, album art, and progress bar.
+    """
+    # Fetch the thumbnail URL and download the image
+    thumb_url = await fetch_thumbnail(videoid)
+    base_image = await download_image(thumb_url)
+    if base_image is None:
+        raise ValueError("Failed to load thumbnail.")
+
+    # Resize and blur background using OpenCV
+    cv_img = cv2.cvtColor(np.array(base_image.resize((1280, 720))), cv2.COLOR_RGB2BGR)
+    blurred = cv2.GaussianBlur(cv_img, (51, 51), 0)
+    bg_img = Image.fromarray(cv2.cvtColor(blurred, cv2.COLOR_BGR2RGB))
+
+    # Create overlay
+    overlay = Image.new("RGBA", bg_img.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+
+    # Player box
+    player_box = [340, 220, 940, 500]
+    draw.rounded_rectangle(player_box, radius=40, fill=(0, 0, 0, 190))
+
+    # Album art
+    album_art = base_image.resize((150, 150))
+    bg_img.paste(album_art, (360, 245))
+
+    # Load fonts
+    try:
+        font_title = ImageFont.truetype("arial.ttf", 34)
+        font_artist = ImageFont.truetype("arial.ttf", 26)
+        font_time = ImageFont.truetype("arial.ttf", 22)
+    except IOError:
+        raise ValueError("Font files not found. Ensure 'arial.ttf' is available.")
+
+    # Draw text
+    draw.text((530, 250), title, font=font_title, fill="white")
+    draw.text((530, 295), artist, font=font_artist, fill="#DDDDDD")
+
+    # Progress bar
+    bar_x, bar_y = 530, 350
+    bar_w = 350
+    progress_ratio = min(max(progress_sec / duration_sec, 0), 1)  # Ensure ratio is between 0 and 1
+    draw.rectangle([bar_x, bar_y, bar_x + bar_w, bar_y + 8], fill="#444")
+    draw.rectangle([bar_x, bar_y, bar_x + int(bar_w * progress_ratio), bar_y + 8], fill="#00E676")
+    draw.text((bar_x, bar_y + 12), f"{int(progress_sec // 60)}:{int(progress_sec % 60):02d}", font=font_time, fill="white")
+    draw.text((bar_x + bar_w - 50, bar_y + 12), f"{int(duration_sec // 60)}:{int(duration_sec % 60):02d}", font=font_time, fill="white")
+
+    # Merge and save
+    final_image = Image.alpha_composite(bg_img.convert("RGBA"), overlay)
+    final_image.save(output_path)
