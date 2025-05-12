@@ -1,83 +1,161 @@
+import os
+import re
+import aiofiles
 import aiohttp
-import io
-import asyncio
-from PIL import Image, ImageDraw, ImageFont
-import cv2
-import numpy as np
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
+from unidecode import unidecode
 from youtubesearchpython.__future__ import VideosSearch
+from ChampuXMusic import app
+from config import YOUTUBE_IMG_URL
 
-# Replace with your fallback image
-YOUTUBE_IMG_URL = "https://files.catbox.moe/2f6prl.jpg"
+def changeImageSize(maxWidth, maxHeight, image):
+    widthRatio = maxWidth / image.size[0]
+    heightRatio = maxHeight / image.size[1]
+    newWidth = int(widthRatio * image.size[0])
+    newHeight = int(heightRatio * image.size[1])
+    newImage = image.resize((newWidth, newHeight))
+    return newImage
 
-async def fetch_thumbnail(videoid):
-    """
-    Fetch the thumbnail URL for a given YouTube video ID.
-    """
-    try:
-        results = VideosSearch(f"https://www.youtube.com/watch?v={videoid}", limit=1)
-        for result in (await results.next())["result"]:
-            return result["thumbnails"][0]["url"].split("?")[0]
-    except Exception:
-        return YOUTUBE_IMG_URL
+def truncate(text):
+    list = text.split(" ")
+    text1 = ""
+    text2 = ""    
+    for i in list:
+        if len(text1) + len(i) < 30:        
+            text1 += " " + i
+        elif len(text2) + len(i) < 30:       
+            text2 += " " + i
 
-async def download_image(url):
-    """
-    Download an image from a URL and return it as a PIL Image object.
-    """
+    text1 = text1.strip()
+    text2 = text2.strip()     
+    return [text1,text2]
+
+def crop_center_circle(img, output_size, border, crop_scale=1.5):
+    half_the_width = img.size[0] / 2
+    half_the_height = img.size[1] / 2
+    larger_size = int(output_size * crop_scale)
+    img = img.crop(
+        (
+            half_the_width - larger_size/2,
+            half_the_height - larger_size/2,
+            half_the_width + larger_size/2,
+            half_the_height + larger_size/2
+        )
+    )
+    
+    img = img.resize((output_size - 2*border, output_size - 2*border))
+    
+    
+    final_img = Image.new("RGBA", (output_size, output_size), "white")
+    
+    
+    mask_main = Image.new("L", (output_size - 2*border, output_size - 2*border), 0)
+    draw_main = ImageDraw.Draw(mask_main)
+    draw_main.ellipse((0, 0, output_size - 2*border, output_size - 2*border), fill=255)
+    
+    final_img.paste(img, (border, border), mask_main)
+    
+    
+    mask_border = Image.new("L", (output_size, output_size), 0)
+    draw_border = ImageDraw.Draw(mask_border)
+    draw_border.ellipse((0, 0, output_size, output_size), fill=255)
+    
+    result = Image.composite(final_img, Image.new("RGBA", final_img.size, (0, 0, 0, 0)), mask_border)
+    
+    return result
+
+
+
+async def get_thumb(videoid):
+    if os.path.isfile(f"cache/{videoid}_v4.png"):
+        return f"cache/{videoid}_v4.png"
+
+    url = f"https://www.youtube.com/watch?v={videoid}"
+    results = VideosSearch(url, limit=1)
+    for result in (await results.next())["result"]:
+        try:
+            title = result["title"]
+            title = re.sub("\W+", " ", title)
+            title = title.title()
+        except:
+            title = "Unsupported Title"
+        try:
+            duration = result["duration"]
+        except:
+            duration = "Unknown Mins"
+        thumbnail = result["thumbnails"][0]["url"].split("?")[0]
+        try:
+            views = result["viewCount"]["short"]
+        except:
+            views = "Unknown Views"
+        try:
+            channel = result["channel"]["name"]
+        except:
+            channel = "Unknown Channel"
+
     async with aiohttp.ClientSession() as session:
-        async with session.get(url) as resp:
+        async with session.get(thumbnail) as resp:
             if resp.status == 200:
-                return Image.open(io.BytesIO(await resp.read())).convert("RGB")
-    return None
+                f = await aiofiles.open(f"cache/thumb{videoid}.png", mode="wb")
+                await f.write(await resp.read())
+                await f.close()
 
-async def generate_styled_thumbnail(videoid, title, artist, progress_sec, duration_sec, output_path="styled_thumb.jpg"):
-    """
-    Generate a styled thumbnail with a blurred background, album art, and progress bar.
-    """
-    # Fetch the thumbnail URL and download the image
-    thumb_url = await fetch_thumbnail(videoid)
-    base_image = await download_image(thumb_url)
-    if base_image is None:
-        raise ValueError("Failed to load thumbnail.")
+    youtube = Image.open(f"cache/thumb{videoid}.png")
+    image1 = changeImageSize(1280, 720, youtube)
+    image2 = image1.convert("RGBA")
+    background = image2.filter(filter=ImageFilter.BoxBlur(20))
+    enhancer = ImageEnhance.Brightness(background)
+    background = enhancer.enhance(0.6)
+    draw = ImageDraw.Draw(background)
+    arial = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 30)
+    font = ImageFont.truetype("ChampuMusic/assets/font.ttf", 30)
+    title_font = ImageFont.truetype("ChampuMusic/assets/font3.ttf", 45)
 
-    # Resize and blur background using OpenCV
-    cv_img = cv2.cvtColor(np.array(base_image.resize((1280, 720))), cv2.COLOR_RGB2BGR)
-    blurred = cv2.GaussianBlur(cv_img, (51, 51), 0)
-    bg_img = Image.fromarray(cv2.cvtColor(blurred, cv2.COLOR_BGR2RGB))
 
-    # Create overlay
-    overlay = Image.new("RGBA", bg_img.size, (0, 0, 0, 0))
-    draw = ImageDraw.Draw(overlay)
+    circle_thumbnail = crop_center_circle(youtube, 400, 20)
+    circle_thumbnail = circle_thumbnail.resize((400, 400))
+    circle_position = (120, 160)
+    background.paste(circle_thumbnail, circle_position, circle_thumbnail)
 
-    # Player box
-    player_box = [340, 220, 940, 500]
-    draw.rounded_rectangle(player_box, radius=40, fill=(0, 0, 0, 190))
+    text_x_position = 565
 
-    # Album art
-    album_art = base_image.resize((150, 150))
-    bg_img.paste(album_art, (360, 245))
+    title1 = truncate(title)
+    draw.text((text_x_position, 180), title1[0], fill=(255, 255, 255), font=title_font)
+    draw.text((text_x_position, 230), title1[1], fill=(255, 255, 255), font=title_font)
+    draw.text((text_x_position, 320), f"{channel}  |  {views[:23]}", (255, 255, 255), font=arial)
 
-    # Load fonts
+    
+    line_length = 580  
+
+    
+    red_length = int(line_length * 0.6)
+    white_length = line_length - red_length
+
+    
+    start_point_red = (text_x_position, 380)
+    end_point_red = (text_x_position + red_length, 380)
+    draw.line([start_point_red, end_point_red], fill="red", width=9)
+
+    
+    start_point_white = (text_x_position + red_length, 380)
+    end_point_white = (text_x_position + line_length, 380)
+    draw.line([start_point_white, end_point_white], fill="white", width=8)
+
+    
+    circle_radius = 10 
+    circle_position = (end_point_red[0], end_point_red[1])
+    draw.ellipse([circle_position[0] - circle_radius, circle_position[1] - circle_radius,
+                  circle_position[0] + circle_radius, circle_position[1] + circle_radius], fill="red")
+    draw.text((text_x_position, 400), "00:00", (255, 255, 255), font=arial)
+    draw.text((1080, 400), duration, (255, 255, 255), font=arial)
+
+    play_icons = Image.open("ChampuMusic/assets/play_icons.png")
+    play_icons = play_icons.resize((580, 62))
+    background.paste(play_icons, (text_x_position, 450), play_icons)
+
     try:
-        font_title = ImageFont.truetype("arial.ttf", 34)
-        font_artist = ImageFont.truetype("arial.ttf", 26)
-        font_time = ImageFont.truetype("arial.ttf", 22)
-    except IOError:
-        raise ValueError("Font files not found. Ensure 'arial.ttf' is available.")
-
-    # Draw text
-    draw.text((530, 250), title, font=font_title, fill="white")
-    draw.text((530, 295), artist, font=font_artist, fill="#DDDDDD")
-
-    # Progress bar
-    bar_x, bar_y = 530, 350
-    bar_w = 350
-    progress_ratio = min(max(progress_sec / duration_sec, 0), 1)  # Ensure ratio is between 0 and 1
-    draw.rectangle([bar_x, bar_y, bar_x + bar_w, bar_y + 8], fill="#444")
-    draw.rectangle([bar_x, bar_y, bar_x + int(bar_w * progress_ratio), bar_y + 8], fill="#00E676")
-    draw.text((bar_x, bar_y + 12), f"{int(progress_sec // 60)}:{int(progress_sec % 60):02d}", font=font_time, fill="white")
-    draw.text((bar_x + bar_w - 50, bar_y + 12), f"{int(duration_sec // 60)}:{int(duration_sec % 60):02d}", font=font_time, fill="white")
-
-    # Merge and save
-    final_image = Image.alpha_composite(bg_img.convert("RGBA"), overlay)
-    final_image.save(output_path)
+        os.remove(f"cache/thumb{videoid}.png")
+    except:
+        pass
+    background.save(f"cache/{videoid}_v4.png")
+    return f"cache/{videoid}_v4.png"
