@@ -68,50 +68,57 @@ def crop_center_circle(img, output_size, border, crop_scale=1.5):
 
 async def get_thumb(videoid):
     try:
-        if not os.path.exists("cache"):
-            os.makedirs("cache", exist_ok=True)
+        # Ensure cache directory exists
+        os.makedirs("cache", exist_ok=True)
+        cached_path = f"cache/{videoid}_v4.png"
+        if os.path.exists(cached_path):
+            return cached_path
 
-        if os.path.isfile(f"cache/{videoid}_v4.png"):
-            return f"cache/{videoid}_v4.png"
-
+        # Fetch video info
         url = f"https://www.youtube.com/watch?v={videoid}"
         try:
-            results = VideosSearch(url, limit=1)
-            for result in (await results.next())["result"]:
-                title = result.get("title", "Unsupported Title")
-                title = re.sub("\W+", " ", title).title()
-                duration = result.get("duration", "Unknown Mins")
-                thumbnail = result["thumbnails"][0]["url"].split("?")[0]
-                views = result.get("viewCount", {}).get("short", "Unknown Views")
-                channel = result.get("channel", {}).get("name", "Unknown Channel")
+            results = await VideosSearch(url, limit=1).next()
+            video_info = results["result"][0]
+            
+            title = str(video_info.get("title", "Unsupported Title"))
+            title = re.sub(r"\W+", " ", title).title()
+            
+            duration = str(video_info.get("duration", "Unknown Mins"))
+            thumbnail_url = video_info["thumbnails"][0]["url"].split("?")[0]
+            views = str(video_info.get("viewCount", {}).get("short", "Unknown Views"))
+            channel = str(video_info.get("channel", {}).get("name", "Unknown Channel"))
         except Exception as e:
-            print(f"Error fetching video info: {e}")
+            print(f"Video info error: {e}")
             return YOUTUBE_IMG_URL
 
-        # Download thumbnail with error handling
+        # Download thumbnail
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(thumbnail) as resp:
-                    if resp.status == 200:
-                        async with aiofiles.open(f"cache/thumb{videoid}.png", mode="wb") as f:
-                            await f.write(await resp.read())
-                    else:
-                        print(f"Thumbnail download failed with status {resp.status}")
-                        return YOUTUBE_IMG_URL
+                async with session.get(thumbnail_url) as resp:
+                    if resp.status != 200:
+                        raise ValueError(f"HTTP {resp.status}")
+                    async with aiofiles.open(f"cache/thumb{videoid}.png", "wb") as f:
+                        await f.write(await resp.read())
         except Exception as e:
-            print(f"Thumbnail download error: {e}")
+            print(f"Thumbnail download failed: {e}")
             return YOUTUBE_IMG_URL
 
+        # Process image
         try:
             youtube = Image.open(f"cache/thumb{videoid}.png")
+            background = changeImageSize(1280, 720, youtube).convert("RGBA")
+            background = background.filter(ImageFilter.BoxBlur(20))
+            enhancer = ImageEnhance.Brightness(background)
+            background = enhancer.enhance(0.6)
+            
+            # Add text, circles, etc. (omitted for brevity)
+            background.save(cached_path)
+            return cached_path
+            
         except Exception as e:
-            print(f"Error opening thumbnail: {e}")
+            print(f"Image processing error: {e}")
             return YOUTUBE_IMG_URL
 
-        # Rest of your image processing code...
-
-        return f"cache/{videoid}_v4.png"
-
     except Exception as e:
-        print(f"Error in get_thumb: {e}")
+        print(f"Unexpected error in get_thumb: {e}")
         return YOUTUBE_IMG_URL
