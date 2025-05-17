@@ -6,7 +6,7 @@ from pytgcalls.exceptions import NoActiveGroupCall
 
 import config
 from ChampuMusic import LOGGER, app, userbot
-from ChampuMusic.core.call import Anony
+from ChampuMusic.core.call import Champu
 from ChampuMusic.misc import sudo
 from ChampuMusic.plugins import ALL_MODULES
 from ChampuMusic.utils.database import get_banned_users, get_gbanned
@@ -20,10 +20,8 @@ async def init():
         and not config.STRING3
         and not config.STRING4
         and not config.STRING5
-        and not config.STRING6
-        and not config.STRING7
     ):
-        LOGGER(__name__).error("Assistant client variables not defined, exiting...")
+        LOGGER(__name__).error("ᴀssɪsᴛᴀɴᴛ ᴄʟɪᴇɴᴛ ᴠᴀʀɪᴀʙʟᴇs ɴᴏᴛ ᴅᴇғɪɴᴇᴅ, ᴇxɪᴛɪɴɢ...")
         exit()
     await sudo()
     try:
@@ -38,26 +36,26 @@ async def init():
     await app.start()
     for all_module in ALL_MODULES:
         importlib.import_module("ChampuMusic.plugins" + all_module)
-    LOGGER("ChampuMusic.plugins").info("Successfully Imported Modules...")
+    LOGGER("ChampuMusic.plugins").info("sᴜᴄᴄᴇssғᴜʟʟʏ ɪᴍᴘᴏʀᴛᴇᴅ ᴍᴏᴅᴜʟᴇs...")
     await userbot.start()
-    await Anony.start()
+    await Champu.start()
     try:
-        await Anony.stream_call("https://te.legra.ph/file/29f784eb49d230ab62e9e.mp4")
+        await Champu.stream_call("https://telegra.ph/file/58cc6ef6d0a2a720ea6e3.mp4")
     except NoActiveGroupCall:
         LOGGER("ChampuMusic").error(
-            "Please turn on the videochat of your log group\channel.\n\nStopping Bot..."
+            "ᴘʟᴇᴀsᴇ ᴛᴜʀɴ ᴏɴ ᴛʜᴇ ᴠɪᴅᴇᴏᴄʜᴀᴛ ᴏғ ʏᴏᴜʀ ʟᴏɢ ɢʀᴏᴜᴘ\ᴄʜᴀɴɴᴇʟ.\n\nsᴛᴏᴘᴘɪɴɢ ʙᴏᴛ..."
         )
         exit()
     except:
         pass
-    await Anony.decorators()
+    await Champu.decorators()
     LOGGER("ChampuMusic").info(
-        "Tere naina 💋"
+        "\x43\x68\x61\x6D\x70\x75\x20\x42\x6F\x74\x20\x68\x61\x73\x20\x62\x65\x65\x6E\x20\x73\x75\x63\x63\x65\x73\x73\x66\x75\x6C\x6C\x79\x20\x73\x74\x61\x72\x74\x65\x64\x2E\x0A\x0A\x40\x54\x68\x65\x43\x68\x61\x6D\x70\x75\x20"
     )
     await idle()
     await app.stop()
     await userbot.stop()
-    LOGGER("ChampuMusic").info("Stopping AnonX Music Bot...")
+    LOGGER("ChampuMusic").info("sᴛᴏᴘᴘɪɴɢ ᴄʜᴀᴍᴘᴜ ᴍᴜsɪᴄ ʙᴏᴛ...")
 
 
 if __name__ == "__main__":

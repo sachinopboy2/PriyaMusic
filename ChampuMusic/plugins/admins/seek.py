@@ -2,7 +2,7 @@ from pyrogram import filters
 from pyrogram.types import Message
 
 from ChampuMusic import YouTube, app
-from ChampuMusic.core.call import Anony
+from ChampuMusic.core.call import Champu
 from ChampuMusic.misc import db
 from ChampuMusic.utils import AdminRightsCheck, seconds_to_min
 from ChampuMusic.utils.inline import close_markup
@@ -56,7 +56,7 @@ async def seek_comm(cli, message: Message, _, chat_id):
     if "index_" in file_path:
         file_path = playing[0]["vidid"]
     try:
-        await Anony.seek_stream(
+        await Champu.seek_stream(
             chat_id,
             file_path,
             seconds_to_min(to_seek),

@@ -2,7 +2,7 @@ from pyrogram import filters
 from pyrogram.types import Message
 
 from ChampuMusic import app
-from ChampuMusic.core.call import Anony
+from ChampuMusic.core.call import Champu
 from ChampuMusic.misc import SUDOERS, db
 from ChampuMusic.utils import AdminRightsCheck
 from ChampuMusic.utils.database import is_active_chat, is_nonadmin_chat
@@ -94,7 +94,7 @@ async def del_back_playlist(client, CallbackQuery, _):
         text=_["admin_32"].format(CallbackQuery.from_user.mention),
     )
     try:
-        await Anony.speedup_stream(
+        await Champu.speedup_stream(
             chat_id,
             file_path,
             speed,

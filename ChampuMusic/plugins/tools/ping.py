@@ -4,7 +4,7 @@ from pyrogram import filters
 from pyrogram.types import Message
 
 from ChampuMusic import app
-from ChampuMusic.core.call import Anony
+from ChampuMusic.core.call import Champu
 from ChampuMusic.utils import bot_sys_stats
 from ChampuMusic.utils.decorators.language import language
 from ChampuMusic.utils.inline import supp_markup
@@ -23,7 +23,7 @@ async def ping_com(client, message: Message, _):
     )
 
     # Gather stats
-    pytg_ping = await Anony.ping()
+    pytg_ping = await Champu.ping()
     uptime, cpu, ram, disk = await bot_sys_stats()
     end_time = datetime.now()
     ping_time = (end_time - start_time).microseconds / 1000

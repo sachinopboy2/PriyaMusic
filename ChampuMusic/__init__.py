@@ -1,4 +1,4 @@
-from ChampuMusic.core.bot import Anony
+from ChampuMusic.core.bot import Champu
 from ChampuMusic.core.dir import dirr
 from ChampuMusic.core.git import git
 from ChampuMusic.core.userbot import Userbot
@@ -11,7 +11,7 @@ git()
 dbb()
 heroku()
 
-app = Anony()
+app = Champu()
 userbot = Userbot()
 
 
