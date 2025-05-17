@@ -45,20 +45,6 @@ class Userbot(Client):
             session_string=str(config.STRING5),
             no_updates=True,
         )
-        self.six = Client(
-            name="ChampuXAss6",
-            api_id=config.API_ID,
-            api_hash=config.API_HASH,
-            session_string=str(config.STRING6),
-            no_updates=True,
-        )
-        self.seven = Client(
-            name="ChampuXAss7",
-            api_id=config.API_ID,
-            api_hash=config.API_HASH,
-            session_string=str(config.STRING7),
-            no_updates=True,
-        )
 
 
 
@@ -67,9 +53,9 @@ class Userbot(Client):
         if config.STRING1:
             await self.one.start()
             try:
-                await self.one.join_chat("DeadlinetechTeam")
-                await self.one.join_chat("SpotifyXUpdate")
-                await self.one.join_chat("DeadlineTechSUPPORT")
+                await self.one.join_chat("ShivanshuHUB")
+                await self.one.join_chat("TheShivanshu")
+                await self.one.join_chat("ChattingClub007")
             except:
                 pass
             assistants.append(1)
@@ -89,8 +75,8 @@ class Userbot(Client):
         if config.STRING2:
             await self.two.start()
             try:
-                await self.two.join_chat("DeadlineTechSUPPORT")
-                await self.one.join_chat("SpotifyXUpdate")
+                await self.two.join_chat("ChattingClub007")
+                await self.one.join_chat("TheShivanshu")
             except:
                 pass
             assistants.append(2)
@@ -110,8 +96,8 @@ class Userbot(Client):
         if config.STRING3:
             await self.three.start()
             try:
-                await self.three.join_chat("DeadlinetechTeam")
-                await self.one.join_chat("SpotifyXUpdate")
+                await self.three.join_chat("ShivanshuHUB")
+                await self.one.join_chat("TheShivanshu")
             except:
                 pass
             assistants.append(3)
@@ -131,8 +117,8 @@ class Userbot(Client):
         if config.STRING4:
             await self.four.start()
             try:
-                await self.four.join_chat("DeadlinetechTeam")
-                await self.one.join_chat("SpotifyXUpdate")
+                await self.four.join_chat("ShivanshuHUB")
+                await self.one.join_chat("TheShivanshu")
             except:
                 pass
             assistants.append(4)
@@ -152,8 +138,8 @@ class Userbot(Client):
         if config.STRING5:
             await self.five.start()
             try:
-                await self.five.join_chat("SpotifyXUpdate")
-                await self.one.join_chat("DeadlinetechTeam")
+                await self.five.join_chat("TheShivanshu")
+                await self.one.join_chat("ShivanshuHUB")
             except:
                 pass
             assistants.append(5)
@@ -169,50 +155,6 @@ class Userbot(Client):
             self.five.username = self.five.me.username
             assistantids.append(self.five.id)
             LOGGER(__name__).info(f"Assistant Five Started as {self.five.name}")
-            
-            
-        if config.STRING6:
-            await self.six.start()
-            try:
-                await self.six.join_chat("SpotifyXUpdate")
-                await self.one.join_chat("DeadlinetechTeam")
-            except:
-                pass
-            assistants.append(6)
-            try:
-                await self.six.send_message(config.LOGGER_ID, "Assistant Started")
-            except:
-                LOGGER(__name__).error(
-                    "Assistant Account 6 has failed to access the log Group. Make sure that you have added your assistant to your log group and promoted as admin! "
-                )
-                exit()
-            self.six.id = self.six.me.id
-            self.six.name = self.six.me.mention
-            self.six.username = self.six.me.username
-            assistantids.append(self.six.id)
-            LOGGER(__name__).info(f"Assistant Six Started as {self.six.name}")      
-            
-            
-        if config.STRING7:
-            await self.seven.start()
-            try:
-                await self.seven.join_chat("SpotifyXUpdate")
-                await self.one.join_chat("DeadlinetechTeam")
-            except:
-                pass
-            assistants.append(7)
-            try:
-                await self.seven.send_message(config.LOGGER_ID, "Assistant Started")
-            except:
-                LOGGER(__name__).error(
-                    "Assistant Account 7 has failed to access the log Group. Make sure that you have added your assistant to your log group and promoted as admin! "
-                )
-                exit()
-            self.seven.id = self.seven.me.id
-            self.seven.name = self.seven.me.mention
-            self.seven.username = self.seven.me.username
-            assistantids.append(self.seven.id)
-            LOGGER(__name__).info(f"Assistant Seven Started as {self.seven.name}")
 
     
     async def stop(self):
@@ -228,9 +170,5 @@ class Userbot(Client):
                 await self.four.stop()
             if config.STRING5:
                 await self.five.stop()
-            if config.STRING6:
-                await self.six.stop()
-            if config.STRING7:
-                await self.seven.stop()
         except:
             pass
