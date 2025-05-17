@@ -14,12 +14,12 @@
     "env": {
       "API_ID": {
         "description": "ɢᴇᴛ ᴀᴘɪ ɪᴅ ғʀᴏᴍ https://my.telegram.org",
-        "value": "",
+        "value": "20837006",
         "required": true
       },
       "API_HASH": {
         "description": "ɢᴇᴛ ᴀᴘɪ ʜᴀsʜ ғʀᴏᴍ https://my.telegram.org",
-        "value": "",
+        "value": "b7c5f5ea03b19b1687cddf9eceaf69aa",
         "required": true
       },
       "BOT_TOKEN": {
@@ -34,7 +34,7 @@
       },
       "OWNER_ID": {
         "description": "ᴛʜᴇ ᴜsᴇʀ ɪᴅ ᴏғ ᴜsᴇʀ ᴡʜᴏᴍ ʏᴏᴜ ᴡᴏᴜʟᴅ ʟɪᴋᴇ ᴛᴏ ᴀᴅᴅ ᴀs ᴏᴡɴᴇʀ.",
-        "value": "",
+        "value": "7006524418",
         "required": true
       },
       "STRING_SESSION": {
