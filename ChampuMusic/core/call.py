@@ -100,27 +100,6 @@ class Call(PyTgCalls):
             self.userbot5,
             cache_duration=100,
         )
-        self.userbot6 = Client(
-            name="ChampuXAss6",
-            api_id=config.API_ID,
-            api_hash=config.API_HASH,
-            session_string=str(config.STRING6),
-        )
-        self.six = PyTgCalls(
-            self.userbot6,
-            cache_duration=100,
-        )
-        self.userbot7 = Client(
-            name="ChampuXAss7",
-            api_id=config.API_ID,
-            api_hash=config.API_HASH,
-            session_string=str(config.STRING7),
-        )
-        self.seven = PyTgCalls(
-            self.userbot7,
-            cache_duration=100,
-        )
-
     async def pause_stream(self, chat_id: int):
         assistant = await group_assistant(self, chat_id)
         await assistant.pause_stream(chat_id)
