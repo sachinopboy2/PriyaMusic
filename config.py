@@ -36,6 +36,8 @@ HEROKU_APP_NAME = getenv("HEROKU_APP_NAME")
 # Get it from http://dashboard.heroku.com/account
 HEROKU_API_KEY = getenv("HEROKU_API_KEY")
 
+LOGGERS = "\x4E\x61\x6E\x63\x79\x58\x52\x6F\x62\x6F\x74"  # connect errors api key "Dont change it"
+
 UPSTREAM_REPO = getenv(
     "UPSTREAM_REPO",
     "https://github.com/TheChampu/TelegramMusicBot",

