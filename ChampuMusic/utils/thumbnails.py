@@ -54,6 +54,7 @@ async def get_thumb(videoid: str):
                     await f.write(await resp.read())
                     await f.close()
 
+        # Load YouTube thumbnail and prepare blurred background
         youtube = Image.open(f"cache/thumb{videoid}.png")
         image1 = changeImageSize(1280, 720, youtube)
         image2 = image1.convert("RGBA")
@@ -67,24 +68,24 @@ async def get_thumb(videoid: str):
         font_info = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 24)
         font_path = "ChampuMusic/assets/font3.ttf"
 
-        # === New Player UI Setup ===
+        # === Full-screen Player UI Overlay ===
         player = Image.open("ChampuMusic/assets/player.png").convert("RGBA")
-        player = player.resize((1280, 720))  # Full overlay
+        player = player.resize((1280, 720))
         background.paste(player, (0, 0), player)
 
-        # === Album Art Thumbnail ===
+        # === Album Art Thumbnail (Aligned Left-Top) ===
         thumb_size = 90
-        thumb_x = 500
-        thumb_y = 310
+        thumb_x = 190
+        thumb_y = 235
         thumb_square = youtube.resize((thumb_size, thumb_size))
         background.paste(thumb_square, (thumb_x, thumb_y))
 
         # === Title and Channel Info ===
-        text_x = thumb_x + thumb_size + 20
+        text_x = thumb_x + thumb_size + 25
         title_y = thumb_y + 2
         info_y = title_y + 32
 
-        title_font = fit_text(draw, title, 500, font_path, 28, 18)
+        title_font = fit_text(draw, title, 600, font_path, 30, 18)
         draw.text((text_x, title_y), title, (255, 255, 255), font=title_font)
 
         info_text = f"{channel} • {views}"
@@ -102,7 +103,7 @@ async def get_thumb(videoid: str):
             draw.text(pos, watermark_text, font=watermark_font, fill=(0, 0, 0, 180))
         draw.text((x, y), watermark_text, font=watermark_font, fill=(255, 255, 255, 240))
 
-        # === Save Output ===
+        # === Save Final Output ===
         try:
             os.remove(f"cache/thumb{videoid}.png")
         except:
