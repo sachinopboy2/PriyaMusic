@@ -75,8 +75,8 @@ async def get_thumb(videoid: str):
 
         # === Album Art Thumbnail (Aligned Left-Top) ===
         thumb_size = 120
-        thumb_x = 120
-        thumb_y = 260
+        thumb_x = 80
+        thumb_y = 200
         thumb_square = youtube.resize((thumb_size, thumb_size))
         background.paste(thumb_square, (thumb_x, thumb_y))
 
