@@ -74,8 +74,8 @@ async def get_thumb(videoid: str):
         background.paste(player, (0, 0), player)
 
         # === Album Art Thumbnail (Aligned Left-Top) ===
-        thumb_size = 92
-        thumb_x = 185
+        thumb_size = 120
+        thumb_x = 120
         thumb_y = 228
         thumb_square = youtube.resize((thumb_size, thumb_size))
         background.paste(thumb_square, (thumb_x, thumb_y))
@@ -88,11 +88,11 @@ async def get_thumb(videoid: str):
         short_channel = truncate_text(channel, max_chars=30)
 
         # === Title and Channel Info ===
-        text_x = thumb_x + thumb_size + 25
+        text_x = thumb_x + thumb_size + 20
         title_y = thumb_y
-        info_y = title_y + 34
+        info_y = title_y + 30
 
-        title_font = fit_text(draw, short_title, 600, font_path, 34, 22)
+        title_font = fit_text(draw, short_title, 600, font_path, 30, 20)
         draw.text((text_x, title_y), short_title, (255, 255, 255), font=title_font)
 
         info_text = f"{short_channel} • {views}"
