@@ -54,7 +54,7 @@ async def get_thumb(videoid: str):
                     await f.write(await resp.read())
                     await f.close()
 
-        # Load YouTube thumbnail and prepare blurred background
+        # Load and prepare background
         youtube = Image.open(f"cache/thumb{videoid}.png")
         image1 = changeImageSize(1280, 720, youtube)
         image2 = image1.convert("RGBA")
@@ -68,28 +68,35 @@ async def get_thumb(videoid: str):
         font_info = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 24)
         font_path = "ChampuMusic/assets/font3.ttf"
 
-        # === Full-screen Player UI Overlay ===
+        # === Full-screen Player Overlay ===
         player = Image.open("ChampuMusic/assets/player.png").convert("RGBA")
         player = player.resize((1280, 720))
         background.paste(player, (0, 0), player)
 
         # === Album Art Thumbnail (Aligned Left-Top) ===
-        thumb_size = 90
-        thumb_x = 190
-        thumb_y = 235
+        thumb_size = 92
+        thumb_x = 185
+        thumb_y = 228
         thumb_square = youtube.resize((thumb_size, thumb_size))
         background.paste(thumb_square, (thumb_x, thumb_y))
 
+        # === Truncate Helpers ===
+        def truncate_text(text, max_chars=40):
+            return (text[:max_chars - 3] + "...") if len(text) > max_chars else text
+
+        short_title = truncate_text(title)
+        short_channel = truncate_text(channel, max_chars=30)
+
         # === Title and Channel Info ===
         text_x = thumb_x + thumb_size + 25
-        title_y = thumb_y + 2
-        info_y = title_y + 32
+        title_y = thumb_y
+        info_y = title_y + 34
 
-        title_font = fit_text(draw, title, 600, font_path, 30, 18)
-        draw.text((text_x, title_y), title, (255, 255, 255), font=title_font)
+        title_font = fit_text(draw, short_title, 600, font_path, 34, 22)
+        draw.text((text_x, title_y), short_title, (255, 255, 255), font=title_font)
 
-        info_text = f"{channel} • {views}"
-        info_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 22)
+        info_text = f"{short_channel} • {views}"
+        info_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 20)
         draw.text((text_x, info_y), info_text, (200, 200, 200), font=info_font)
 
         # === Watermark ===
