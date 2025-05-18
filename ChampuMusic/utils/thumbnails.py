@@ -54,10 +54,10 @@ async def get_thumb(videoid: str):
                     await f.write(await resp.read())
                     await f.close()
 
-        # Load and blur background
         youtube = Image.open(f"cache/thumb{videoid}.png")
         image1 = changeImageSize(1280, 720, youtube)
         image2 = image1.convert("RGBA")
+
         gradient = Image.new("RGBA", image2.size, (0, 0, 0, 255))
         enhancer = ImageEnhance.Brightness(image2.filter(ImageFilter.GaussianBlur(15)))
         blurred = enhancer.enhance(0.5)
@@ -67,24 +67,31 @@ async def get_thumb(videoid: str):
         font_info = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 24)
         font_path = "ChampuMusic/assets/font3.ttf"
 
-        # Paste the new player UI
+        # === New Player UI Setup ===
         player = Image.open("ChampuMusic/assets/player.png").convert("RGBA")
-        player = player.resize((600, 300))  # Resize to appropriate dimensions
-        background.paste(player, (640, 380), player)  # Adjust positioning if needed
+        player = player.resize((1280, 720))  # Full overlay
+        background.paste(player, (0, 0), player)
 
-        # Paste the square thumbnail (album art)
-        thumb_square = youtube.resize((90, 90))  # Match the square in the player UI
-        background.paste(thumb_square, (655, 395))  # Align with top-left box in player
+        # === Album Art Thumbnail ===
+        thumb_size = 90
+        thumb_x = 500
+        thumb_y = 310
+        thumb_square = youtube.resize((thumb_size, thumb_size))
+        background.paste(thumb_square, (thumb_x, thumb_y))
 
-        # Draw video title
-        title_font = fit_text(draw, title, 300, font_path, 26, 18)
-        draw.text((760, 400), title, (255, 255, 255), font=title_font)
+        # === Title and Channel Info ===
+        text_x = thumb_x + thumb_size + 20
+        title_y = thumb_y + 2
+        info_y = title_y + 32
 
-        # Draw channel and views below the title
+        title_font = fit_text(draw, title, 500, font_path, 28, 18)
+        draw.text((text_x, title_y), title, (255, 255, 255), font=title_font)
+
         info_text = f"{channel} • {views}"
-        draw.text((760, 435), info_text, (200, 200, 200), font=font_info)
+        info_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 22)
+        draw.text((text_x, info_y), info_text, (200, 200, 200), font=info_font)
 
-        # Optional watermark
+        # === Watermark ===
         watermark_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 24)
         watermark_text = "@ShivanshuHUB"
         text_size = draw.textsize(watermark_text, font=watermark_font)
@@ -95,6 +102,7 @@ async def get_thumb(videoid: str):
             draw.text(pos, watermark_text, font=watermark_font, fill=(0, 0, 0, 180))
         draw.text((x, y), watermark_text, font=watermark_font, fill=(255, 255, 255, 240))
 
+        # === Save Output ===
         try:
             os.remove(f"cache/thumb{videoid}.png")
         except:
