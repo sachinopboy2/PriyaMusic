@@ -73,13 +73,28 @@ async def get_thumb(videoid: str):
         player = player.resize((1280, 720))
         background.paste(player, (0, 0), player)
 
-        # === Album Art Thumbnail (Aligned Left-Top) ===
-        thumb_size = 120
-        thumb_x = 80
-        thumb_y = 260
+        # === Album Art Thumbnail (Larger, Rounded, Centered Vertically, More Left) ===
+        thumb_size = 300  # Increased from 120 to 300
+        thumb_x = 40  # Moved more left from 80 to 40
+        thumb_y = (720 - thumb_size) // 2  # Centered vertically
+        
+        # Create rounded corners mask
+        mask = Image.new('L', (thumb_size, thumb_size), 0)
+        draw_mask = ImageDraw.Draw(mask)
+        draw_mask.rounded_rectangle([(0, 0), (thumb_size, thumb_size)], radius=30, fill=255)
+        
+        # Resize and apply rounded corners
         thumb_square = youtube.resize((thumb_size, thumb_size))
-        background.paste(thumb_square, (thumb_x, thumb_y))
+        thumb_square.putalpha(mask)
+        
+        # Paste the rounded thumbnail
+        background.paste(thumb_square, (thumb_x, thumb_y), thumb_square)
 
+        # === Adjust text positions to match new thumbnail ===
+        text_x = thumb_x + thumb_size + 20
+        title_y = thumb_y + 20  # Adjusted to align with new thumbnail position
+        info_y = title_y + 40  # Increased spacing
+        
         # === Truncate Helpers ===
         def truncate_text(text, max_chars=40):
             return (text[:max_chars - 3] + "...") if len(text) > max_chars else text
