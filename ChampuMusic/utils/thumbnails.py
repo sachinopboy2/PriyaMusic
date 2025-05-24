@@ -71,9 +71,9 @@ async def get_thumb(videoid: str):
         player = Image.open("ChampuMusic/assets/champu.png").convert("RGBA").resize((1280, 720))
         background.paste(player, (0, 0), player)
 
-        # Circular Album Art (positioned 3-4% left of center)
-        thumb_size = 260
-        thumb_x = (1280 // 2) - (thumb_size // 2) - int(1280 * 0.035)  # 3.5% left of center
+        # Circular Album Art 
+        thumb_size = 235
+        thumb_x = (1280 // 2) - (thumb_size // 2) - int(1280 * 0.05)  
         thumb_y = (720 - thumb_size) // 2
 
         # Create circular mask
@@ -86,10 +86,10 @@ async def get_thumb(videoid: str):
         background.paste(thumb_square, (thumb_x, thumb_y), thumb_square)
 
         # Title and Channel Info (positioned to the right of the album art)
-        text_x = thumb_x + thumb_size + 30
-        title_y = thumb_y + 50
-        info_y = title_y + 50
-        progress_y = info_y + 40  # Position for progress bar
+        text_x = thumb_x + thumb_size + 20
+        title_y = thumb_y + 30
+        info_y = title_y + 30
+        progress_y = info_y + 25  # Position for progress bar
 
         def truncate_text(text, max_chars=40):
             return (text[:max_chars - 3] + "...") if len(text) > max_chars else text
