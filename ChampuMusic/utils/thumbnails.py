@@ -72,8 +72,8 @@ async def get_thumb(videoid: str):
         background.paste(player, (0, 0), player)
 
         # Circular Album Art 
-        thumb_size = 250
-        thumb_x = (1280 // 2) - (thumb_size // 2) - int(1280 * 0.20)  
+        thumb_size = 255
+        thumb_x = (1280 // 2) - (thumb_size // 2) - int(1280 * 0.18)  
         thumb_y = (720 - thumb_size) // 2
 
         # Create circular mask
@@ -89,7 +89,7 @@ async def get_thumb(videoid: str):
         text_x = thumb_x + thumb_size + 40  
         title_y = thumb_y + 20  
         info_y = title_y + 60  
-        progress_y = info_y + 1  
+        progress_y = info_y + 20  
 
         def truncate_text(text, max_chars=30):
             return (text[:max_chars - 3] + "...") if len(text) > max_chars else text
@@ -108,7 +108,7 @@ async def get_thumb(videoid: str):
         bar_width = 400
         bar_height = 6
         bar_x = text_x + 40  
-        bar_y = progress_y + 20
+        bar_y = progress_y + 10
         
         # Progress bar background
         draw.rounded_rectangle(
