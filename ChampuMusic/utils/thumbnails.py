@@ -105,7 +105,7 @@ async def get_thumb(videoid: str):
         draw.text((text_x, info_y), info_text, (200, 200, 200), font=info_font)
 
         # Progress Bar
-        bar_width = 350
+        bar_width = 200
         bar_height = 5
         bar_x = text_x
         bar_y = progress_y + 10
@@ -114,7 +114,7 @@ async def get_thumb(videoid: str):
         draw.rounded_rectangle(
             (bar_x, bar_y, bar_x + bar_width, bar_y + bar_height),
             radius=bar_height//2,
-            fill=(100, 100, 100, 200)
+            fill=(50, 50, 50, 50)
         )
 
         
