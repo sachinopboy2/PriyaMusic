@@ -88,8 +88,8 @@ async def get_thumb(videoid: str):
         # Title and Channel Info (positioned to the right of the album art)
         text_x = thumb_x + thumb_size + 1
         title_y = thumb_y + 35
-        info_y = title_y + 20
-        progress_y = info_y + 50  # Position for progress bar
+        progress_y = title_y + 70 
+        info_y = title_y + 40  
 
         def truncate_text(text, max_chars=30):
             return (text[:max_chars - 3] + "...") if len(text) > max_chars else text
@@ -107,7 +107,7 @@ async def get_thumb(videoid: str):
         # Progress Bar
         bar_width = 400
         bar_height = 6
-        bar_x = text_x
+        bar_x = text_x + 20  
         bar_y = progress_y + 20
         
         # Progress bar background
