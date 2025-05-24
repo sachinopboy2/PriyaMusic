@@ -72,7 +72,7 @@ async def get_thumb(videoid: str):
         background.paste(player, (0, 0), player)
 
         # Circular Album Art 
-        thumb_size = 235
+        thumb_size = 245
         thumb_x = (1280 // 2) - (thumb_size // 2) - int(1280 * 0.18)  
         thumb_y = (720 - thumb_size) // 2
 
@@ -86,9 +86,9 @@ async def get_thumb(videoid: str):
         background.paste(thumb_square, (thumb_x, thumb_y), thumb_square)
 
         # Title and Channel Info
-        text_x = thumb_x + thumb_size + 40 
+        text_x = thumb_x + thumb_size + 40  
         title_y = thumb_y + 20  
-        info_y = title_y + 30  
+        info_y = title_y + 60  
         progress_y = info_y + 40  
 
         def truncate_text(text, max_chars=30):
@@ -101,13 +101,13 @@ async def get_thumb(videoid: str):
         draw.text((text_x, title_y), short_title, (255, 255, 255), font=title_font)
 
         info_text = f"{short_channel} • {views}"
-        info_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 20) 
+        info_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 20)  # Smaller font
         draw.text((text_x, info_y), info_text, (200, 200, 200), font=info_font)
 
-        # Progress Bar
+        # Progress Bar (moved right)
         bar_width = 400
         bar_height = 6
-        bar_x = text_x + 20  
+        bar_x = text_x + 40  
         bar_y = progress_y + 20
         
         # Progress bar background
