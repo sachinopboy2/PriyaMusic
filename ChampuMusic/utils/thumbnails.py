@@ -73,7 +73,7 @@ async def get_thumb(videoid: str):
 
         # Circular Album Art 
         thumb_size = 235
-        thumb_x = (1280 // 2) - (thumb_size // 2) - int(1280 * 0.25)  
+        thumb_x = (1280 // 2) - (thumb_size // 2) - int(1280 * 0.20)  
         thumb_y = (720 - thumb_size) // 2
 
         # Create circular mask
