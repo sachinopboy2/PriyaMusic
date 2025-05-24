@@ -72,8 +72,8 @@ async def get_thumb(videoid: str):
         background.paste(player, (0, 0), player)
 
         # Circular Album Art 
-        thumb_size = 255
-        thumb_x = (1280 // 2) - (thumb_size // 2) - int(1280 * 0.19)  
+        thumb_size = 260
+        thumb_x = (1280 // 2) - (thumb_size // 2) - int(1280 * 0.18)  
         thumb_y = (720 - thumb_size) // 2
 
         # Create circular mask
@@ -108,7 +108,7 @@ async def get_thumb(videoid: str):
         bar_width = 400
         bar_height = 6
         bar_x = text_x + 40  
-        bar_y = progress_y + 40
+        bar_y = progress_y + 25
         
         # Progress bar background
         draw.rounded_rectangle(
