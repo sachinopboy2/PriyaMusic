@@ -36,7 +36,7 @@ def fit_text(draw, text, max_width, font_path, start_size, min_size):
     return ImageFont.truetype(font_path, min_size)
 
 
-async def get_thumb(videoid: str, user_photo_url: str = None, group_photo_url: str = None, bot_photo_url: str = None):
+async def get_thumb(videoid: str):
     url = f"https://www.youtube.com/watch?v={videoid}"
     try:
         results = VideosSearch(url, limit=1)
@@ -68,57 +68,34 @@ async def get_thumb(videoid: str, user_photo_url: str = None, group_photo_url: s
         font_path = "ChampuMusic/assets/font3.ttf"
 
         # Overlay player
-        player = Image.open("ChampuMusic/assets/player.png").convert("RGBA").resize((1280, 720))
+        player = Image.open("ChampuMusic/assets/champu.png").convert("RGBA").resize((1280, 720))
         background.paste(player, (0, 0), player)
 
-        # Album Art
-        thumb_size = 300
-        thumb_x = 40
+        # Circular Album Art (positioned 3-4% left of center)
+        thumb_size = 400  # Larger size for better visibility
+        thumb_x = (1280 // 2) - (thumb_size // 2) - int(1280 * 0.035)  # 3.5% left of center
         thumb_y = (720 - thumb_size) // 2
 
+        # Create circular mask
         mask = Image.new('L', (thumb_size, thumb_size), 0)
-        ImageDraw.Draw(mask).rounded_rectangle([(0, 0), (thumb_size, thumb_size)], radius=30, fill=255)
+        draw_mask = ImageDraw.Draw(mask)
+        draw_mask.ellipse((0, 0, thumb_size, thumb_size), fill=255)
 
         thumb_square = youtube.resize((thumb_size, thumb_size))
         thumb_square.putalpha(mask)
+        
+        # Add white border around the circle
+        border_size = thumb_size + 10
+        border = Image.new('RGBA', (border_size, border_size), (0, 0, 0, 0))
+        draw_border = ImageDraw.Draw(border)
+        draw_border.ellipse((0, 0, border_size, border_size), fill=(255, 255, 255, 255))
+        background.paste(border, (thumb_x - 5, thumb_y - 5), border)
         background.paste(thumb_square, (thumb_x, thumb_y), thumb_square)
 
-        # === Determine Profile Image ===
-        profile_url = user_photo_url or group_photo_url or bot_photo_url
-        profile_size = 100  # Increased size for better visibility
-        profile_x = 1280 - profile_size - 40  # Right side with 40px margin
-        profile_y = (720 - profile_size) // 2  # Vertically centered
-
-        if profile_url:
-            try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(profile_url) as resp:
-                        if resp.status == 200:
-                            profile_data = await resp.read()
-                            profile_path = f"cache/profile{videoid}.png"
-                            async with aiofiles.open(profile_path, mode="wb") as f:
-                                await f.write(profile_data)
-
-                            profile_img = Image.open(profile_path).convert("RGBA").resize((profile_size, profile_size))
-                            mask = Image.new('L', (profile_size, profile_size), 0)
-                            ImageDraw.Draw(mask).ellipse((0, 0, profile_size, profile_size), fill=255)
-                            profile_img.putalpha(mask)
-                            
-                            # Create a circular border
-                            border = Image.new('RGBA', (profile_size + 10, profile_size + 10), (0, 0, 0, 0))
-                            ImageDraw.Draw(border).ellipse((0, 0, profile_size + 10, profile_size + 10), fill=(255, 255, 255, 255))
-                            background.paste(border, (profile_x - 5, profile_y - 5), border)
-                            background.paste(profile_img, (profile_x, profile_y), profile_img)
-                            
-                            os.remove(profile_path)
-            except Exception as e:
-                print(f"[Profile Image Error] {e}")
-                traceback.print_exc()
-
-        # Title and Channel Info
+        # Title and Channel Info (positioned to the right of the album art)
         text_x = thumb_x + thumb_size + 30
-        title_y = thumb_y + 20
-        info_y = title_y + 40
+        title_y = thumb_y + 50
+        info_y = title_y + 50
 
         def truncate_text(text, max_chars=40):
             return (text[:max_chars - 3] + "...") if len(text) > max_chars else text
@@ -126,11 +103,11 @@ async def get_thumb(videoid: str, user_photo_url: str = None, group_photo_url: s
         short_title = truncate_text(title, max_chars=30)
         short_channel = truncate_text(channel, max_chars=30)
 
-        title_font = fit_text(draw, short_title, 600, font_path, 30, 20)
+        title_font = fit_text(draw, short_title, 600, font_path, 40, 25)
         draw.text((text_x, title_y), short_title, (255, 255, 255), font=title_font)
 
         info_text = f"{short_channel} • {views}"
-        info_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 18)
+        info_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 24)
         draw.text((text_x, info_y), info_text, (200, 200, 200), font=info_font)
 
         # Watermark
