@@ -73,7 +73,7 @@ async def get_thumb(videoid: str):
 
         # Circular Album Art 
         thumb_size = 255
-        thumb_x = (1280 // 2) - (thumb_size // 2) - int(1280 * 0.18)  
+        thumb_x = (1280 // 2) - (thumb_size // 2) - int(1280 * 0.19)  
         thumb_y = (720 - thumb_size) // 2
 
         # Create circular mask
@@ -104,11 +104,11 @@ async def get_thumb(videoid: str):
         info_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 20)  # Smaller font
         draw.text((text_x, info_y), info_text, (200, 200, 200), font=info_font)
 
-        # Progress Bar (moved right)
+        # Progress Bar 
         bar_width = 400
         bar_height = 6
         bar_x = text_x + 40  
-        bar_y = progress_y + 10
+        bar_y = progress_y + 40
         
         # Progress bar background
         draw.rounded_rectangle(
