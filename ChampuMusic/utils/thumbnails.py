@@ -85,9 +85,9 @@ async def get_thumb(videoid: str, user_photo_url: str = None, group_photo_url: s
 
         # === Determine Profile Image ===
         profile_url = user_photo_url or group_photo_url or bot_photo_url
-        profile_size = 80
-        profile_x = thumb_x + thumb_size + 30
-        profile_y = thumb_y + thumb_size - profile_size
+        profile_size = 100  # Increased size for better visibility
+        profile_x = 1280 - profile_size - 40  # Right side with 40px margin
+        profile_y = (720 - profile_size) // 2  # Vertically centered
 
         if profile_url:
             try:
@@ -103,14 +103,20 @@ async def get_thumb(videoid: str, user_photo_url: str = None, group_photo_url: s
                             mask = Image.new('L', (profile_size, profile_size), 0)
                             ImageDraw.Draw(mask).ellipse((0, 0, profile_size, profile_size), fill=255)
                             profile_img.putalpha(mask)
+                            
+                            # Create a circular border
+                            border = Image.new('RGBA', (profile_size + 10, profile_size + 10), (0, 0, 0, 0))
+                            ImageDraw.Draw(border).ellipse((0, 0, profile_size + 10, profile_size + 10), fill=(255, 255, 255, 255))
+                            background.paste(border, (profile_x - 5, profile_y - 5), border)
                             background.paste(profile_img, (profile_x, profile_y), profile_img)
+                            
                             os.remove(profile_path)
             except Exception as e:
                 print(f"[Profile Image Error] {e}")
                 traceback.print_exc()
 
         # Title and Channel Info
-        text_x = profile_x + profile_size + 20 if profile_url else thumb_x + thumb_size + 20
+        text_x = thumb_x + thumb_size + 30
         title_y = thumb_y + 20
         info_y = title_y + 40
 
