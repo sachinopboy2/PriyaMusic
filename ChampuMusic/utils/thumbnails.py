@@ -43,7 +43,7 @@ async def get_thumb(videoid: str):
         result = (await results.next())["result"][0]
 
         title = re.sub(r"\W+", " ", result.get("title", "Unsupported Title")).title()
-        duration = result.get("duration", "Unknown Mins")
+        duration = result.get("duration", "00:00")
         thumbnail = result["thumbnails"][0]["url"].split("?")[0]
         views = result.get("viewCount", {}).get("short", "Unknown Views")
         channel = result.get("channel", {}).get("name", "Unknown Channel")
@@ -72,7 +72,7 @@ async def get_thumb(videoid: str):
         background.paste(player, (0, 0), player)
 
         # Circular Album Art (positioned 3-4% left of center)
-        thumb_size = 400  # Larger size for better visibility
+        thumb_size = 290
         thumb_x = (1280 // 2) - (thumb_size // 2) - int(1280 * 0.035)  # 3.5% left of center
         thumb_y = (720 - thumb_size) // 2
 
@@ -83,19 +83,13 @@ async def get_thumb(videoid: str):
 
         thumb_square = youtube.resize((thumb_size, thumb_size))
         thumb_square.putalpha(mask)
-        
-        # Add white border around the circle
-        border_size = thumb_size + 10
-        border = Image.new('RGBA', (border_size, border_size), (0, 0, 0, 0))
-        draw_border = ImageDraw.Draw(border)
-        draw_border.ellipse((0, 0, border_size, border_size), fill=(255, 255, 255, 255))
-        background.paste(border, (thumb_x - 5, thumb_y - 5), border)
         background.paste(thumb_square, (thumb_x, thumb_y), thumb_square)
 
         # Title and Channel Info (positioned to the right of the album art)
         text_x = thumb_x + thumb_size + 30
         title_y = thumb_y + 50
         info_y = title_y + 50
+        progress_y = info_y + 40  # Position for progress bar
 
         def truncate_text(text, max_chars=40):
             return (text[:max_chars - 3] + "...") if len(text) > max_chars else text
@@ -109,6 +103,28 @@ async def get_thumb(videoid: str):
         info_text = f"{short_channel} • {views}"
         info_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 24)
         draw.text((text_x, info_y), info_text, (200, 200, 200), font=info_font)
+
+        # Progress Bar
+        bar_width = 400
+        bar_height = 8
+        bar_x = text_x
+        bar_y = progress_y + 30
+        
+        # Progress bar background
+        draw.rounded_rectangle(
+            (bar_x, bar_y, bar_x + bar_width, bar_y + bar_height),
+            radius=bar_height//2,
+            fill=(100, 100, 100, 200)
+        )
+
+        
+        # Time indicators
+        time_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 20)
+        draw.text((bar_x, bar_y + bar_height + 5), "00:00", (200, 200, 200), font=time_font)
+        duration_text = duration if ":" in duration else f"00:{duration.zfill(2)}"
+        duration_width = draw.textlength(duration_text, font=time_font)
+        draw.text((bar_x + bar_width - duration_width, bar_y + bar_height + 5), 
+                 duration_text, (200, 200, 200), font=time_font)
 
         # Watermark
         watermark_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 24)
