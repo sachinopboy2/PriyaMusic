@@ -36,7 +36,7 @@ def fit_text(draw, text, max_width, font_path, start_size, min_size):
     return ImageFont.truetype(font_path, min_size)
 
 
-async def get_thumb(videoid: str):
+async def get_thumb(videoid: str, user_photo_url: str = None, group_photo_url: str = None, bot_photo_url: str = None):
     url = f"https://www.youtube.com/watch?v={videoid}"
     try:
         results = VideosSearch(url, limit=1)
@@ -73,10 +73,10 @@ async def get_thumb(videoid: str):
         player = player.resize((1280, 720))
         background.paste(player, (0, 0), player)
 
-        # === Album Art Thumbnail (Larger, Rounded, Centered Vertically, More Left) ===
-        thumb_size = 300  # Increased from 120 to 300
-        thumb_x = 40  # Moved more left from 80 to 40
-        thumb_y = (720 - thumb_size) // 2  # Centered vertically
+        # === Album Art Thumbnail (Larger, Rounded, Centered Vertically) ===
+        thumb_size = 300
+        thumb_x = 40
+        thumb_y = (720 - thumb_size) // 2
         
         # Create rounded corners mask
         mask = Image.new('L', (thumb_size, thumb_size), 0)
@@ -90,23 +90,54 @@ async def get_thumb(videoid: str):
         # Paste the rounded thumbnail
         background.paste(thumb_square, (thumb_x, thumb_y), thumb_square)
 
-        # === Adjust text positions to match new thumbnail ===
-        text_x = thumb_x + thumb_size + 20
-        title_y = thumb_y + 20  # Adjusted to align with new thumbnail position
-        info_y = title_y + 40  # Increased spacing
+        # === User Profile Photo ===
+        profile_size = 80
+        profile_x = thumb_x + thumb_size + 30
+        profile_y = thumb_y + thumb_size - profile_size  # Align bottom with album art
         
-        # === Truncate Helpers ===
+        # Determine which profile image to use (user > group > bot)
+        profile_url = None
+        if user_photo_url:
+            profile_url = user_photo_url
+        elif group_photo_url:
+            profile_url = group_photo_url
+        elif bot_photo_url:
+            profile_url = bot_photo_url
+            
+        if profile_url:
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(profile_url) as resp:
+                        if resp.status == 200:
+                            profile_data = await resp.read()
+                            f = await aiofiles.open(f"cache/profile{videoid}.png", mode="wb")
+                            await f.write(profile_data)
+                            await f.close()
+                            
+                            profile_img = Image.open(f"cache/profile{videoid}.png").convert("RGBA")
+                            # Make circular mask
+                            mask = Image.new('L', (profile_size, profile_size), 0)
+                            draw_mask = ImageDraw.Draw(mask)
+                            draw_mask.ellipse((0, 0, profile_size, profile_size), fill=255)
+                            
+                            profile_img = profile_img.resize((profile_size, profile_size))
+                            profile_img.putalpha(mask)
+                            background.paste(profile_img, (profile_x, profile_y), profile_img)
+                            os.remove(f"cache/profile{videoid}.png")
+            except:
+                traceback.print_exc()
+                # If profile image fails, we'll just continue without it
+
+        # === Title and Channel Info ===
+        text_x = profile_x + profile_size + 20 if profile_url else thumb_x + thumb_size + 20
+        title_y = thumb_y + 20
+        info_y = title_y + 40
+
         def truncate_text(text, max_chars=40):
             return (text[:max_chars - 3] + "...") if len(text) > max_chars else text
 
         short_title = truncate_text(title, max_chars=30) 
         short_channel = truncate_text(channel, max_chars=30)
-
-        # === Title and Channel Info ===
-        text_x = thumb_x + thumb_size + 20
-        title_y = thumb_y
-        info_y = title_y + 38 
-
 
         title_font = fit_text(draw, short_title, 600, font_path, 30, 20)
         draw.text((text_x, title_y), short_title, (255, 255, 255), font=title_font)
