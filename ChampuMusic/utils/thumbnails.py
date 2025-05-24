@@ -110,6 +110,9 @@ async def get_thumb(videoid: str):
         bar_x = text_x
         bar_y = progress_y + 15
         
+        # Ensure bar_width is positive
+        bar_width = max(10, bar_width)  # Minimum width of 10 pixels
+        
         # Progress bar background (white with transparency)
         draw.rounded_rectangle(
             (bar_x, bar_y, bar_x + bar_width, bar_y + bar_height),
@@ -117,14 +120,14 @@ async def get_thumb(videoid: str):
             fill=(255, 255, 255, 100))  # Semi-transparent white
         
         # Progress bar progress (0% for now)
-        progress_width = 5  # Starting progress
+        progress_width = min(max(5, 0), bar_width)  # Ensure between 5 and bar_width
         draw.rounded_rectangle(
             (bar_x, bar_y, bar_x + progress_width, bar_y + bar_height),
             radius=bar_height//2,
             fill=(255, 255, 255))  # Solid white
         
         # Add progress dot (●) at random position (25-75% of bar)
-        dot_position = bar_x + int(bar_width * random.uniform(0.25, 0.75))
+        dot_position = bar_x + min(max(int(bar_width * random.uniform(0.25, 0.75)), bar_x + 5), bar_x + bar_width - 5)
         dot_size = bar_height + 4
         draw.ellipse(
             (dot_position - dot_size//2, bar_y - dot_size//4,
