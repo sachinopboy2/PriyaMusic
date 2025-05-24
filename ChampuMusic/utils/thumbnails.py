@@ -73,7 +73,7 @@ async def get_thumb(videoid: str):
 
         # Circular Album Art 
         thumb_size = 235
-        thumb_x = (1280 // 2) - (thumb_size // 2) - int(1280 * 0.35)  
+        thumb_x = (1280 // 2) - (thumb_size // 2) - int(1280 * 0.25)  
         thumb_y = (720 - thumb_size) // 2
 
         # Create circular mask
@@ -86,9 +86,9 @@ async def get_thumb(videoid: str):
         background.paste(thumb_square, (thumb_x, thumb_y), thumb_square)
 
         # Title and Channel Info (positioned to the right of the album art)
-        text_x = thumb_x + thumb_size + 10
-        title_y = thumb_y + 20
-        info_y = title_y + 25
+        text_x = thumb_x + thumb_size + 5
+        title_y = thumb_y + 25
+        info_y = title_y + 10
         progress_y = info_y + 30  # Position for progress bar
 
         def truncate_text(text, max_chars=40):
@@ -105,10 +105,10 @@ async def get_thumb(videoid: str):
         draw.text((text_x, info_y), info_text, (200, 200, 200), font=info_font)
 
         # Progress Bar
-        bar_width = 400
+        bar_width = 350
         bar_height = 6
         bar_x = text_x
-        bar_y = progress_y + 25
+        bar_y = progress_y + 20
         
         # Progress bar background
         draw.rounded_rectangle(
