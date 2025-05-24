@@ -85,11 +85,11 @@ async def get_thumb(videoid: str):
         thumb_square.putalpha(mask)
         background.paste(thumb_square, (thumb_x, thumb_y), thumb_square)
 
-        # Title and Channel Info (positioned to the right of the album art)
-        text_x = thumb_x + thumb_size + 1
-        title_y = thumb_y + 35
-        progress_y = title_y + 70 
-        info_y = title_y + 40  
+        # Title and Channel Info
+        text_x = thumb_x + thumb_size + 40 
+        title_y = thumb_y + 20  
+        info_y = title_y + 30  
+        progress_y = info_y + 40  
 
         def truncate_text(text, max_chars=30):
             return (text[:max_chars - 3] + "...") if len(text) > max_chars else text
@@ -101,7 +101,7 @@ async def get_thumb(videoid: str):
         draw.text((text_x, title_y), short_title, (255, 255, 255), font=title_font)
 
         info_text = f"{short_channel} • {views}"
-        info_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 24)
+        info_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 20) 
         draw.text((text_x, info_y), info_text, (200, 200, 200), font=info_font)
 
         # Progress Bar
