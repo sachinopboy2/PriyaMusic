@@ -71,9 +71,9 @@ async def get_thumb(videoid: str):
         player = Image.open("ChampuMusic/assets/champu.png").convert("RGBA").resize((1280, 720))
         background.paste(player, (0, 0), player)
 
-        # Circular Album Art (positioned 3-4% left of center)
-        thumb_size = 290
-        thumb_x = (1280 // 2) - (thumb_size // 2) - int(1280 * 0.035)  # 3.5% left of center
+        # Circular Album Art 
+        thumb_size = 250  
+        thumb_x = (1280 // 2) - (thumb_size // 2) - int(1280 * 0.08)  
         thumb_y = (720 - thumb_size) // 2
 
         # Create circular mask
@@ -85,11 +85,11 @@ async def get_thumb(videoid: str):
         thumb_square.putalpha(mask)
         background.paste(thumb_square, (thumb_x, thumb_y), thumb_square)
 
-        # Title and Channel Info (positioned to the right of the album art)
-        text_x = thumb_x + thumb_size + 30
-        title_y = thumb_y + 50
-        info_y = title_y + 50
-        progress_y = info_y + 40  # Position for progress bar
+        # Title and Channel Info 
+        text_x = thumb_x + thumb_size + 20
+        title_y = thumb_y + 30
+        info_y = title_y + 35
+        progress_y = info_y + 30  # Position for progress bar
 
         def truncate_text(text, max_chars=40):
             return (text[:max_chars - 3] + "...") if len(text) > max_chars else text
@@ -97,29 +97,42 @@ async def get_thumb(videoid: str):
         short_title = truncate_text(title, max_chars=30)
         short_channel = truncate_text(channel, max_chars=30)
 
-        title_font = fit_text(draw, short_title, 600, font_path, 40, 25)
+        title_font = fit_text(draw, short_title, 500, font_path, 30, 20)  # Smaller max size
         draw.text((text_x, title_y), short_title, (255, 255, 255), font=title_font)
 
         info_text = f"{short_channel} • {views}"
-        info_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 24)
+        info_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 18)  # Smaller font
         draw.text((text_x, info_y), info_text, (200, 200, 200), font=info_font)
 
-        # Progress Bar
-        bar_width = 400
-        bar_height = 8
+        # Progress Bar 
+        bar_width = 350 
+        bar_height = 4   
         bar_x = text_x
-        bar_y = progress_y + 30
+        bar_y = progress_y + 15
         
-        # Progress bar background
+        # Progress bar background (white with transparency)
         draw.rounded_rectangle(
             (bar_x, bar_y, bar_x + bar_width, bar_y + bar_height),
             radius=bar_height//2,
-            fill=(100, 100, 100, 200)
-        )
-
+            fill=(255, 255, 255, 100))  # Semi-transparent white
         
-        # Time indicators
-        time_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 20)
+        # Progress bar progress (0% for now)
+        progress_width = 5  # Starting progress
+        draw.rounded_rectangle(
+            (bar_x, bar_y, bar_x + progress_width, bar_y + bar_height),
+            radius=bar_height//2,
+            fill=(255, 255, 255))  # Solid white
+        
+        # Add progress dot (●) at random position (25-75% of bar)
+        dot_position = bar_x + int(bar_width * random.uniform(0.25, 0.75))
+        dot_size = bar_height + 4
+        draw.ellipse(
+            (dot_position - dot_size//2, bar_y - dot_size//4,
+             dot_position + dot_size//2, bar_y + bar_height + dot_size//4),
+            fill=(255, 255, 255))
+        
+        # Time indicators (smaller)
+        time_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 16)  # Smaller font
         draw.text((bar_x, bar_y + bar_height + 5), "00:00", (200, 200, 200), font=time_font)
         duration_text = duration if ":" in duration else f"00:{duration.zfill(2)}"
         duration_width = draw.textlength(duration_text, font=time_font)
@@ -127,11 +140,11 @@ async def get_thumb(videoid: str):
                  duration_text, (200, 200, 200), font=time_font)
 
         # Watermark
-        watermark_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 24)
+        watermark_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 20)  # Smaller
         watermark_text = "@ShivanshuHUB"
         text_size = draw.textsize(watermark_text, font=watermark_font)
-        x = background.width - text_size[0] - 25
-        y = background.height - text_size[1] - 25
+        x = background.width - text_size[0] - 20
+        y = background.height - text_size[1] - 20
         for dx in (-1, 1):
             for dy in (-1, 1):
                 draw.text((x + dx, y + dy), watermark_text, font=watermark_font, fill=(0, 0, 0, 180))
