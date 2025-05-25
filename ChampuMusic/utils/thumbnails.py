@@ -107,7 +107,7 @@ async def get_thumb(videoid: str):
         # Progress Bar 
         bar_width = 400
         bar_height = 6
-        bar_x = text_x + int(bar_width * 0.06)
+        bar_x = text_x + int(bar_width * 0.08)
         bar_y = info_y + 45  
         
         # Progress bar background
