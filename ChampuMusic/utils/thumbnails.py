@@ -60,7 +60,7 @@ async def get_thumb(videoid: str):
 
         gradient = Image.new("RGBA", image1.size, (0, 0, 0, 255))
         enhancer = ImageEnhance.Brightness(image1.filter(ImageFilter.GaussianBlur(15)))
-        blurred = enhancer.enhance(0.5)
+        blurred = enhancer.enhance(0.3)
         background = Image.alpha_composite(gradient, blurred)
 
         draw = ImageDraw.Draw(background)
@@ -101,7 +101,7 @@ async def get_thumb(videoid: str):
         draw.text((text_x, title_y), short_title, (255, 255, 255), font=title_font)
 
         info_text = f"{short_channel} • {views}"
-        info_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 20)  # Smaller font
+        info_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 20)  
         draw.text((text_x, info_y), info_text, (200, 200, 200), font=info_font)
 
         # Progress Bar 

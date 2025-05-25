@@ -11,7 +11,7 @@ from youtubesearchpython.__future__ import VideosSearch
 from ChampuMusic.utils.database import is_on_off
 from ChampuMusic.utils.formatters import time_to_seconds
 
-cookies_file = "ChampuMusic/assets/cookies.txt"
+cookies_file = "cookies/cookies.txt"
 
 async def shell_cmd(cmd):
     proc = await asyncio.create_subprocess_shell(
