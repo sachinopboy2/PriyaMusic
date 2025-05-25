@@ -107,8 +107,8 @@ async def get_thumb(videoid: str):
         # Progress Bar 
         bar_width = 400
         bar_height = 6
-        bar_x = text_x + 40  
-        bar_y = progress_y + 25
+        bar_x = text_x + int(bar_width * 0.06)
+        bar_y = info_y + 45  
         
         # Progress bar background
         draw.rounded_rectangle(
@@ -116,7 +116,6 @@ async def get_thumb(videoid: str):
             radius=bar_height//2,
             fill=(100, 100, 100, 200)
         )
-
         
         # Time indicators
         time_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 20)
@@ -125,7 +124,7 @@ async def get_thumb(videoid: str):
         duration_width = draw.textlength(duration_text, font=time_font)
         draw.text((bar_x + bar_width - duration_width, bar_y + bar_height + 5), 
                  duration_text, (200, 200, 200), font=time_font)
-
+        
         # Watermark
         watermark_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 24)
         watermark_text = "@ShivanshuHUB"
