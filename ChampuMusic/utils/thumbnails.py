@@ -68,7 +68,7 @@ async def get_thumb(videoid: str):
         font_path = "ChampuMusic/assets/font3.ttf"
 
         # Overlay player
-        player = Image.open("ChampuMusic/assets/champu.png").convert("RGBA").resize((1280, 720))
+        player = Image.open("ChampuMusic/assets/player.png").convert("RGBA").resize((1280, 720))
         background.paste(player, (0, 0), player)
 
         # Circular Album Art 
