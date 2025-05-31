@@ -8,23 +8,39 @@ import traceback
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
 from youtubesearchpython.__future__ import VideosSearch
 
-
 def changeImageSize(maxWidth, maxHeight, image):
     ratio = min(maxWidth / image.size[0], maxHeight / image.size[1])
     newSize = (int(image.size[0] * ratio), int(image.size[1] * ratio))
     return image.resize(newSize, Image.ANTIALIAS)
 
+def truncate_ellipsis(text, max_chars=20):
+    if len(text) <= max_chars:
+        return text
+    truncated = text[:max_chars]
+    if ' ' in truncated:
+        truncated = truncated[:truncated.rfind(' ')]
+    return truncated + "..." if len(truncated) > 0 else text[:max_chars-3] + "..."
 
-def truncate(text, max_chars=50):
-    words = text.split()
-    text1, text2 = "", ""
-    for word in words:
-        if len(text1 + " " + word) <= max_chars and not text2:
-            text1 += " " + word
+def ensure_text_fits(draw, text, font, max_width):
+    """Ensure text doesn't exceed max width by truncating with ellipsis"""
+    text_width = draw.textlength(text, font=font)
+    if text_width <= max_width:
+        return text
+    
+    # Binary search for optimal truncation
+    low = 1
+    high = len(text)
+    best = ""
+    while low <= high:
+        mid = (low + high) // 2
+        truncated = truncate_ellipsis(text, mid)
+        truncated_width = draw.textlength(truncated, font=font)
+        if truncated_width <= max_width:
+            best = truncated
+            low = mid + 1
         else:
-            text2 += " " + word
-    return [text1.strip(), text2.strip()]
-
+            high = mid - 1
+    return best if best else "..."
 
 def fit_text(draw, text, max_width, font_path, start_size, min_size):
     size = start_size
@@ -35,116 +51,102 @@ def fit_text(draw, text, max_width, font_path, start_size, min_size):
         size -= 1
     return ImageFont.truetype(font_path, min_size)
 
-
 async def get_thumb(videoid: str):
     url = f"https://www.youtube.com/watch?v={videoid}"
     try:
         results = VideosSearch(url, limit=1)
         result = (await results.next())["result"][0]
 
-        title = re.sub(r"\W+", " ", result.get("title", "Unsupported Title")).title()
+        title = result.get("title", "Unknown Title")
         duration = result.get("duration", "00:00")
         thumbnail = result["thumbnails"][0]["url"].split("?")[0]
-        views = result.get("viewCount", {}).get("short", "Unknown Views")
         channel = result.get("channel", {}).get("name", "Unknown Channel")
 
-        # Download YouTube thumbnail
+        # Download thumbnail
         async with aiohttp.ClientSession() as session:
             async with session.get(thumbnail) as resp:
                 if resp.status == 200:
                     async with aiofiles.open(f"cache/thumb{videoid}.png", mode="wb") as f:
                         await f.write(await resp.read())
 
-        youtube = Image.open(f"cache/thumb{videoid}.png")
-        image1 = changeImageSize(1280, 720, youtube).convert("RGBA")
+        base_img = Image.open(f"cache/thumb{videoid}.png").convert("RGBA")
+        bg_img = changeImageSize(1280, 720, base_img).convert("RGBA")
+        blurred_bg = bg_img.filter(ImageFilter.GaussianBlur(30))
 
-        gradient = Image.new("RGBA", image1.size, (0, 0, 0, 255))
-        enhancer = ImageEnhance.Brightness(image1.filter(ImageFilter.GaussianBlur(15)))
-        blurred = enhancer.enhance(0.3)
-        background = Image.alpha_composite(gradient, blurred)
 
-        draw = ImageDraw.Draw(background)
-        font_info = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 24)
-        font_path = "ChampuMusic/assets/font3.ttf"
 
-        # Overlay player
-        player = Image.open("ChampuMusic/assets/player.png").convert("RGBA").resize((1280, 720))
-        background.paste(player, (0, 0), player)
+        # Card overlay
+        card_width, card_height = 960, 320  # <-- Add this line
+        card = Image.new("RGBA", (card_width, card_height), (40, 40, 60, 200))
+        mask = Image.new("L", (card_width, card_height), 0)
+        draw_mask = ImageDraw.Draw(mask)
+        draw_mask.rounded_rectangle([0, 0, card_width, card_height], radius=40, fill=255)
+        card_pos = ((1280 - card_width) // 2, (720 - card_height) // 2)
+        blurred_bg.paste(card, card_pos, mask)
+        
+        final_bg = blurred_bg.copy()
+        final_bg.paste(card, card_pos, mask)
+        draw = ImageDraw.Draw(final_bg)
 
-        # Circular Album Art 
-        thumb_size = 260
-        thumb_x = (1280 // 2) - (thumb_size // 2) - int(1280 * 0.18)  
-        thumb_y = (720 - thumb_size) // 2
 
-        # Create circular mask
+        # Font paths
+        font_path_regular = "ShyMusicBot/assets/font2.ttf"
+        font_path_bold = "ShyMusicBot/assets/font3.ttf"
+
+        # Medium album art 
+        thumb_size = 250
+        corner_radius = 40
         mask = Image.new('L', (thumb_size, thumb_size), 0)
         draw_mask = ImageDraw.Draw(mask)
-        draw_mask.ellipse((0, 0, thumb_size, thumb_size), fill=255)
+        draw_mask.rounded_rectangle((0, 0, thumb_size, thumb_size), radius=corner_radius, fill=255)
 
-        thumb_square = youtube.resize((thumb_size, thumb_size))
+        thumb_square = base_img.resize((thumb_size, thumb_size))
         thumb_square.putalpha(mask)
-        background.paste(thumb_square, (thumb_x, thumb_y), thumb_square)
 
-        # Title and Channel Info
-        text_x = thumb_x + thumb_size + 40  
-        title_y = thumb_y + 20  
-        info_y = title_y + 60  
-        progress_y = info_y + 20  
+        thumb_x = card_pos[0] + 40
+        thumb_y = card_pos[1] + (card_height - thumb_size) // 2
+        final_bg.paste(thumb_square, (thumb_x, thumb_y), thumb_square)
 
-        def truncate_text(text, max_chars=30):
-            return (text[:max_chars - 3] + "...") if len(text) > max_chars else text
+        # Text layout with overflow protection
+        text_x = thumb_x + thumb_size + 40
+        text_y = thumb_y + 20
+        max_text_width = card_width - (text_x - card_pos[0]) - 40
 
-        short_title = truncate_text(title, max_chars=20)
-        short_channel = truncate_text(channel, max_chars=20)
+        # Fonts
+        font_small = ImageFont.truetype(font_path_regular, 28)
+        font_medium = ImageFont.truetype(font_path_regular, 36)
+        font_title = fit_text(draw, title, max_text_width, font_path_bold, 48, 32)
 
-        title_font = fit_text(draw, short_title, 600, font_path, 40, 25)
-        draw.text((text_x, title_y), short_title, (255, 255, 255), font=title_font)
-
-        info_text = f"{short_channel} • {views}"
-        info_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 20)  
-        draw.text((text_x, info_y), info_text, (200, 200, 200), font=info_font)
-
-        # Progress Bar 
-        bar_width = 400
-        bar_height = 6
-        bar_x = text_x + int(bar_width * 0.01)
-        bar_y = info_y + 45  
+        # Channel name (with overflow protection)
+        channel_text = ensure_text_fits(draw, channel, font_small, max_text_width)
+        draw.text((text_x, text_y), "NOW PLAYING", fill=(180, 180, 180), font=font_small)
         
-        # Progress bar background
-        draw.rounded_rectangle(
-            (bar_x, bar_y, bar_x + bar_width, bar_y + bar_height),
-            radius=bar_height//2,
-            fill=(100, 100, 100, 200)
+        # Title (with dynamic sizing and overflow protection)
+        title_text = ensure_text_fits(draw, title, font_title, max_text_width)
+        draw.text(
+            (text_x, text_y + 40),
+            title_text,
+            fill=(255, 255, 255),
+            font=font_title
         )
         
-        # Time indicators
-        time_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 20)
-        draw.text((bar_x, bar_y + bar_height + 5), "00:00", (200, 200, 200), font=time_font)
-        duration_text = duration if ":" in duration else f"00:{duration.zfill(2)}"
-        duration_width = draw.textlength(duration_text, font=time_font)
-        draw.text((bar_x + bar_width - duration_width, bar_y + bar_height + 5), 
-                 duration_text, (200, 200, 200), font=time_font)
+        # Artist and duration
+        artist_text = ensure_text_fits(draw, channel, font_medium, max_text_width)
+        draw.text((text_x, text_y + 100), artist_text, fill=(200, 200, 200), font=font_medium)
         
-        # Watermark
-        watermark_font = ImageFont.truetype("ChampuMusic/assets/font2.ttf", 24)
-        watermark_text = "@ShivanshuHUB"
-        text_size = draw.textsize(watermark_text, font=watermark_font)
-        x = background.width - text_size[0] - 25
-        y = background.height - text_size[1] - 25
-        for dx in (-1, 1):
-            for dy in (-1, 1):
-                draw.text((x + dx, y + dy), watermark_text, font=watermark_font, fill=(0, 0, 0, 180))
-        draw.text((x, y), watermark_text, font=watermark_font, fill=(255, 255, 255, 240))
+        duration_text = f"00:00 / {duration}"
+        duration_text = ensure_text_fits(draw, duration_text, font_small, max_text_width)
+        draw.text((text_x, text_y + 150), duration_text, fill=(170, 170, 170), font=font_small)
 
-        # Save and return path
+        output_path = f"cache/{videoid}_styled.png"
+        final_bg.save(output_path)
+
         try:
             os.remove(f"cache/thumb{videoid}.png")
         except:
             pass
 
-        tpath = f"cache/{videoid}.png"
-        background.save(tpath)
-        return tpath
+        return output_path
 
     except Exception as e:
         print(f"[get_thumb Error] {e}")
